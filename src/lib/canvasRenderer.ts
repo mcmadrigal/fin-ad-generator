@@ -79,31 +79,33 @@ interface FormatSpec {
   padXSpec?:           number;   // override horizontal padding at spec size
   autoShrinkHeadline?: boolean;  // shrink font to fit (horizontal only), no truncation
   headlineFloorPx?:    number;   // minimum headlinePx for auto-shrink, at spec size
+  layoutStyle?:        'poster'; // editorial: logo top, large headline center, CTA footnote bottom
+  textAlign?:          'left' | 'center'; // poster alignment; default: left for W≥H, center for H>W
 }
 
 const FORMAT_SPECS: Record<string, FormatSpec> = {
   // TTD
   // 300×250 is the reference — no override flags
-  '160x600':   { headlinePx: 25,  ctaPx: 13.65, logoH: 18,  layout: 'vertical',   headLS: -0.03, headLH: 0.95, maxWordsPerLine: 3, padXSpec: 20 },
-  '300x250':   { headlinePx: 21,  ctaPx: 9,     logoH: 22,  layout: 'vertical',   headLS: -0.06, headLH: 1.00 },
+  '160x600':   { headlinePx: 80,  ctaPx: 10,    logoH: 14,  layout: 'vertical',   headLS: -0.03, headLH: 0.95, maxWordsPerLine: 2, padXSpec: 20, layoutStyle: 'poster', textAlign: 'center' },
+  '300x250':   { headlinePx: 80,  ctaPx: 7,     logoH: 14,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 2, layoutStyle: 'poster', textAlign: 'left' },
   '728x90':    { headlinePx: 18,  ctaPx: 10,    logoH: 20,  layout: 'horizontal', headLS: -0.03, headLH: 0.95 },
-  '300x600':   { headlinePx: 25,  ctaPx: 10,    logoH: 26,  layout: 'vertical',   headLS: -0.06, headLH: 1.00 },
+  '300x600':   { headlinePx: 120, ctaPx: 10,    logoH: 18,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
   '320x50':    { headlinePx: 15,  ctaPx: 9,     logoH: 14,  layout: 'horizontal', headLS: -0.03, headLH: 0.95, autoShrinkHeadline: true, headlineFloorPx: 9 },
   '300x50':    { headlinePx: 15,  ctaPx: 9,     logoH: 14,  layout: 'horizontal', headLS: -0.03, headLH: 0.95, autoShrinkHeadline: true, headlineFloorPx: 9 },
-  '768x1024':  { headlinePx: 38,  ctaPx: 13,    logoH: 20,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4 },
-  '1024x768':  { headlinePx: 44,  ctaPx: 13,    logoH: 36,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4 },
-  '320x480':   { headlinePx: 23,  ctaPx: 10,    logoH: 24,  layout: 'vertical',   headLS: -0.06, headLH: 0.95 },
+  '768x1024':  { headlinePx: 160, ctaPx: 13,    logoH: 20,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'center' },
+  '1024x768':  { headlinePx: 160, ctaPx: 13,    logoH: 28,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'left' },
+  '320x480':   { headlinePx: 100, ctaPx: 10,    logoH: 16,  layout: 'vertical',   headLS: -0.06, headLH: 0.95, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
   '970x250':   { headlinePx: 25,  ctaPx: 11,    logoH: 26,  layout: 'horizontal', headLS: -0.03, headLH: 0.95 },
-  '480x320':   { headlinePx: 23,  ctaPx: 10,    logoH: 24,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4 },
+  '480x320':   { headlinePx: 100, ctaPx: 10,    logoH: 18,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
   // LinkedIn (+30% headline, max 4 words/line)
-  '1080x1080': { headlinePx: 62,  ctaPx: 15,    logoH: 48,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4 },
-  '1200x1200': { headlinePx: 69,  ctaPx: 16,    logoH: 52,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4 },
-  // 6Sense (+30% headline, max 4 words/line)
-  '1200x628':  { headlinePx: 48,  ctaPx: 13,    logoH: 36,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4 },
-  // Meta (+30% headline, max 4 words/line)
+  '1080x1080': { headlinePx: 220, ctaPx: 11,    logoH: 36,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
+  '1200x1200': { headlinePx: 240, ctaPx: 12,    logoH: 40,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
+  // 6Sense
+  '1200x628':  { headlinePx: 160, ctaPx: 11,    logoH: 28,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'left' },
+  // Meta
   // 1080×1080 shared with LinkedIn above
-  '1080x1920': { headlinePx: 72,  ctaPx: 16,    logoH: 54,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4 },
-  '1920x1080': { headlinePx: 57,  ctaPx: 14,    logoH: 44,  layout: 'vertical',   headLS: -0.03, headLH: 0.95, maxWordsPerLine: 4 },
+  '1080x1920': { headlinePx: 300, ctaPx: 13,    logoH: 36,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
+  '1920x1080': { headlinePx: 200, ctaPx: 13,    logoH: 40,  layout: 'vertical',   headLS: -0.03, headLH: 0.95, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'left' },
 };
 
 function getSpec(W: number, H: number): FormatSpec {
@@ -192,7 +194,9 @@ export async function renderAdToCanvas(
   const isPortrait = sH > sW;
 
   // 5. Route to layout
-  if (spec.layout === 'horizontal') {
+  if (spec.layoutStyle === 'poster') {
+    renderPosterLayout(ctx, W, H, text, cta, logoImg, spec, isPortrait);
+  } else if (spec.layout === 'horizontal') {
     renderHorizontalLayout(ctx, W, H, text, cta, logoImg, spec);
   } else {
     renderVerticalLayout(ctx, W, H, text, cta, logoImg, spec, isPortrait);
@@ -286,6 +290,93 @@ function renderVerticalLayout(
   for (let i = 0; i < lines.length; i++) {
     ctx.fillText(lines[i], W / 2, textStartY + i * lineH);
   }
+  setLetterSpacing(ctx, 0);
+}
+
+// ---------------------------------------------------------------------------
+// Poster layout — logo discrete top | large editorial headline | CTA footnote
+// ---------------------------------------------------------------------------
+function renderPosterLayout(
+  ctx: CanvasRenderingContext2D,
+  W: number, H: number,
+  text: string, cta: string,
+  logoImg: HTMLImageElement,
+  spec: FormatSpec,
+  isPortrait: boolean,
+): void {
+  const padX     = spec.padXSpec !== undefined ? spec.padXSpec : W * 0.08;
+  const padY     = H * 0.08;
+  const maxW     = W - padX * 2;
+  const align    = spec.textAlign ?? (isPortrait ? 'center' : 'left');
+  const innerGap = padY * 0.35; // breathing room between logo→headline and headline→CTA
+
+  // ── Logo (pinned top, small and discrete) ─────────────────────────────────
+  const rawLogoW  = spec.logoH * LOGO_ASPECT;
+  const logoW     = Math.min(rawLogoW, maxW);
+  const logoH     = logoW / LOGO_ASPECT;
+  const logoX     = align === 'left' ? padX : (W - logoW) / 2;
+  ctx.drawImage(logoImg, logoX, padY, logoW, logoH);
+
+  // ── CTA (pinned bottom, footnote-sized) ───────────────────────────────────
+  const ctaPx     = spec.ctaPx ?? spec.headlinePx * 0.15;
+  const ruleH     = Math.max(0.5, ctaPx * 0.05);
+  const ruleGap   = Math.max(1,   ctaPx * 0.15);
+  const ctaBlockH = ctaPx + ruleGap + ruleH;
+  const ctaY      = H - padY - ctaBlockH;
+
+  if (spec.ctaPx !== null && cta.trim().length > 0) {
+    if (align === 'left') {
+      drawCTALeft(ctx, padX, cta, ctaPx, ctaY, ruleH, ruleGap);
+    } else {
+      drawCTACentered(ctx, W, cta, ctaPx, ctaY, ruleH, ruleGap);
+    }
+  }
+
+  // ── Headline (fills the large middle zone) ────────────────────────────────
+  const headlineZoneTop = padY + logoH + innerGap;
+  const headlineZoneBot = ctaY - innerGap;
+  const headlineZoneH   = headlineZoneBot - headlineZoneTop;
+
+  if (headlineZoneH <= 0 || text.trim().length === 0) return;
+
+  let headlinePx = spec.headlinePx;
+  const { headLS, headLH } = spec;
+  const wordsPerLine = spec.maxWordsPerLine ?? (isPortrait ? 3 : 4);
+  const floorPx      = Math.max(14, H * 0.02);
+
+  const lines = wrapPortraitText(text, wordsPerLine);
+  if (lines.length === 0) return;
+
+  // Overflow loop: reduce font until block fits in headline zone AND all lines fit maxW
+  while (headlinePx > floorPx) {
+    setLetterSpacing(ctx, headLS * headlinePx);
+    ctx.font = headlineFont(headlinePx);
+    const lineH    = headlinePx * headLH;
+    const blockH   = textBlockHeight(lines.length, lineH);
+    const maxLineW = Math.max(...lines.map(l => ctx.measureText(l).width));
+    if (blockH <= headlineZoneH && maxLineW <= maxW) break;
+    headlinePx = Math.max(floorPx, headlinePx - 0.5);
+  }
+
+  const lineH     = headlinePx * headLH;
+  const blockH    = textBlockHeight(lines.length, lineH);
+  const textStartY = headlineZoneTop + (headlineZoneH - blockH) / 2;
+
+  ctx.fillStyle    = '#FFFFFF';
+  ctx.textBaseline = 'top';
+
+  if (align === 'left') {
+    ctx.textAlign = 'left';
+    for (let i = 0; i < lines.length; i++) {
+      ctx.fillText(lines[i], padX, textStartY + i * lineH);
+    }
+  } else {
+    ctx.textAlign = 'center';
+    for (let i = 0; i < lines.length; i++) {
+      ctx.fillText(lines[i], W / 2, textStartY + i * lineH);
+    }
+  }
+
   setLetterSpacing(ctx, 0);
 }
 
@@ -412,6 +503,44 @@ function drawCTACentered(
   ctx.beginPath();
   ctx.moveTo(ruleX, ruleY);
   ctx.lineTo(ruleX + ruleW, ruleY);
+  ctx.strokeStyle = 'rgba(255,255,255,0.60)';
+  ctx.lineWidth   = ruleH;
+  ctx.stroke();
+}
+
+// ---------------------------------------------------------------------------
+// CTA helper (poster left-aligned) — left-anchored uppercase text + underline
+// ---------------------------------------------------------------------------
+function drawCTALeft(
+  ctx: CanvasRenderingContext2D,
+  padX: number,
+  cta: string,
+  ctaPx: number,
+  ctaY: number,
+  ruleH: number,
+  ruleGap: number,
+): void {
+  const ctaDisplay = cta.toUpperCase();
+  const letterSp   = ctaPx * 0.10;
+  setLetterSpacing(ctx, 0);
+  ctx.font = ctaFont(ctaPx);
+  const chars      = ctaDisplay.split('');
+  const charWidths = chars.map(c => ctx.measureText(c).width);
+  const totalW     = charWidths.reduce((s, w) => s + w, 0) + letterSp * Math.max(0, chars.length - 1);
+
+  ctx.fillStyle    = '#FFFFFF';
+  ctx.textBaseline = 'top';
+  let x = padX;
+  for (let i = 0; i < chars.length; i++) {
+    ctx.fillText(chars[i], x, ctaY);
+    x += charWidths[i] + letterSp;
+  }
+
+  const ruleW = totalW + ctaPx * 0.3;
+  const ruleY = ctaY + ctaPx + ruleGap;
+  ctx.beginPath();
+  ctx.moveTo(padX, ruleY);
+  ctx.lineTo(padX + ruleW, ruleY);
   ctx.strokeStyle = 'rgba(255,255,255,0.60)';
   ctx.lineWidth   = ruleH;
   ctx.stroke();
