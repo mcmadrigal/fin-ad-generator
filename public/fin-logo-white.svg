@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 44" fill="none" aria-label="Fin">
+  <!-- Asterisk/spark icon — four rays suggesting intelligence and precision -->
+  <line x1="18" y1="4"  x2="18" y2="40" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="1"  y1="22" x2="35" y2="22" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="6.5" y1="6.5"  x2="29.5" y2="37.5" stroke="white" stroke-width="1.4" stroke-linecap="round" opacity="0.65"/>
+  <line x1="29.5" y1="6.5" x2="6.5"  y2="37.5" stroke="white" stroke-width="1.4" stroke-linecap="round" opacity="0.65"/>
+  <!-- Wordmark: geometric "Fin" in clean strokes -->
+  <!-- F -->
+  <line x1="50" y1="8"  x2="50" y2="36"  stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="50" y1="8"  x2="66" y2="8"   stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="50" y1="22" x2="63" y2="22"  stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+  <!-- i -->
+  <circle cx="76" cy="10" r="1.8" fill="white"/>
+  <line x1="76" y1="16" x2="76" y2="36" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+  <!-- n -->
+  <line x1="86" y1="16" x2="86" y2="36" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M86 16 Q86 14 90 13 Q100 10 102 16 L102 36" stroke="white" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+</svg>

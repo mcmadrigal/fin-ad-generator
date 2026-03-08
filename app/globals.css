@@ -1,0 +1,184 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Brand fonts (self-hosted — actual brand files from /public/fonts/) ── */
+@font-face {
+  font-family: 'Ivory LL';
+  src: url('/fonts/IvoryLL-Light.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Medium LL';
+  src: url('/fonts/MediumLL-Light.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Medium LL';
+  src: url('/fonts/MediumLL-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Medium LL';
+  src: url('/fonts/MediumLL-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Medium LL';
+  src: url('/fonts/MediumLL-BoldItalic.otf') format('opentype');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Medium LL';
+  src: url('/fonts/MediumLL-Italic.otf') format('opentype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Aeonik Fono';
+  src: url('/fonts/aeonikfono-regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ── Brand token custom properties ─────────────────────────────────────── */
+:root {
+  --orange:      #FF5600;
+  --deep-blue:   #080F1E;
+  --off-white:   #F6F6F1;
+  --navy-5:      #151B29;
+  --navy-10:     #212735;
+  --navy-20:     #393F4B;
+  --navy-30:     #535762;
+  --navy-40:     #6B6F78;
+  --stark-white: #FFFFFF;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--deep-blue);
+  color: var(--stark-white);
+  font-family: 'Medium LL', -apple-system, BlinkMacSystemFont, sans-serif;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+.font-display { font-family: 'Ivory LL', Georgia, serif; }
+
+/* ── Form inputs ────────────────────────────────────────────────────────── */
+.fin-input {
+  background: var(--navy-5);
+  border: 1px solid var(--navy-20);
+  border-radius: 4px;
+  color: var(--stark-white);
+  font-family: inherit;
+  font-size: 0.875rem;
+  outline: none;
+  padding: 0.625rem 0.875rem;
+  transition: border-color 150ms ease;
+  width: 100%;
+}
+.fin-input::placeholder { color: var(--navy-40); }
+.fin-input:focus        { border-color: var(--orange); }
+.fin-input.error        { border-color: rgba(255,86,0,0.7); }
+
+/* ── Buttons ────────────────────────────────────────────────────────────── */
+.btn-primary {
+  background: var(--orange);
+  border: none;
+  border-radius: 4px;
+  color: #000;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  padding: 0.75rem 2rem;
+  text-transform: uppercase;
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+.btn-primary:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
+.btn-primary:active:not(:disabled){ transform: translateY(0); }
+.btn-primary:disabled { cursor: not-allowed; opacity: 0.35; }
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--navy-20);
+  border-radius: 4px;
+  color: var(--stark-white);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  padding: 0.625rem 1.5rem;
+  text-transform: uppercase;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+.btn-secondary:hover:not(:disabled) { background: var(--navy-5); border-color: var(--navy-30); }
+.btn-secondary:disabled { cursor: not-allowed; opacity: 0.35; }
+
+/* ── Channel labels ─────────────────────────────────────────────────────── */
+.channel-label {
+  color: var(--orange);
+  font-family: var(--font-inter), sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+
+/* ── Preview card ───────────────────────────────────────────────────────── */
+.preview-card {
+  align-items: center;
+  background: var(--navy-5);
+  border: 1px solid var(--navy-20);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow: hidden;
+  padding: 0.75rem;
+}
+.preview-card canvas { border-radius: 2px; display: block; max-width: 100%; }
+.preview-card .size-label {
+  color: var(--navy-40);
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+/* ── Misc ───────────────────────────────────────────────────────────────── */
+.fin-checkbox { accent-color: var(--orange); height: 14px; width: 14px; }
+.fin-divider  { border: none; border-top: 1px solid var(--navy-20); margin: 0; }
+
+::-webkit-scrollbar            { width: 6px; height: 6px; }
+::-webkit-scrollbar-track      { background: var(--deep-blue); }
+::-webkit-scrollbar-thumb      { background: var(--navy-20); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover{ background: var(--navy-30); }
