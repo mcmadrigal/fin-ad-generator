@@ -99,13 +99,13 @@ const FORMAT_SPECS: Record<string, FormatSpec> = {
   '970x250':   { headlinePx: 25,  ctaPx: 11,    logoH: 26,  layout: 'horizontal', headLS: -0.03, headLH: 0.95 },
   '480x320':   { headlinePx: 80,  ctaPx: 10,    logoH: 18,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
   // LinkedIn
-  '1080x1080': { headlinePx: 176, ctaPx: 15.84, logoH: 51.48,layout: 'vertical',  headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
+  '1080x1080': { headlinePx: 176, ctaPx: 20.59, logoH: 51.48,layout: 'vertical',  headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
   '1200x1200': { headlinePx: 192, ctaPx: 17.28, logoH: 44,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
   // 6Sense
   '1200x628':  { headlinePx: 144, ctaPx: 13.2,  logoH: 28,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'left' },
   // Meta (1080×1080 shared with LinkedIn above)
-  '1080x1920': { headlinePx: 300, ctaPx: 20.28, logoH: 60.84,layout: 'vertical',  headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
-  '1920x1080': { headlinePx: 200, ctaPx: 20.28, logoH: 52,  layout: 'vertical',   headLS: -0.03, headLH: 0.95, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'left' },
+  '1080x1920': { headlinePx: 300, ctaPx: 26.36, logoH: 60.84,layout: 'vertical',  headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
+  '1920x1080': { headlinePx: 200, ctaPx: 26.36, logoH: 52,  layout: 'vertical',   headLS: -0.03, headLH: 0.95, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'left' },
 };
 
 function getSpec(W: number, H: number): FormatSpec {
