@@ -66,7 +66,7 @@ export default function HomePage() {
         }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/logos/lockup_white.svg"
+            src="/logos/fin_logo.svg"
             alt="Fin"
             style={{ height: '22px', width: 'auto', flexShrink: 0 }}
           />

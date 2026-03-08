@@ -5,10 +5,9 @@ import type { AssetSpec } from '@/types';
 import { renderAdToCanvas } from '@/lib/canvasRenderer';
 
 const PREVIEW_MAX_W = 300;
-const PREVIEW_MAX_H = 240;
 
 function calcPreviewDims(w: number, h: number): { pw: number; ph: number } {
-  const scale = Math.min(PREVIEW_MAX_W / w, PREVIEW_MAX_H / h, 1);
+  const scale = Math.min(PREVIEW_MAX_W / w, 1);
   return { pw: Math.round(w * scale), ph: Math.round(h * scale) };
 }
 
@@ -50,10 +49,9 @@ export function CanvasAd({ spec, text, cta, backgroundSrc, onClick }: Props) {
         borderRadius: 2,
         cursor:       onClick ? 'pointer' : undefined,
         display:      'block',
-        // Preserve aspect ratio when grid cell is narrower than pw.
-        // Modern browsers scale canvas height proportionally when only
-        // max-width constrains the CSS width (canvas is a replaced element).
-        maxWidth:     '100%',
+        // Fill the grid cell width; height scales proportionally.
+        // Canvas has intrinsic dimensions so height:auto works like img.
+        width:        '100%',
         height:       'auto',
       }}
       aria-label={`Ad preview for ${spec.label}`}

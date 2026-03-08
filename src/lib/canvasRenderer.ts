@@ -13,13 +13,13 @@ import { wrapText, wrapPortraitText, textBlockHeight } from './textLayout';
 // ---------------------------------------------------------------------------
 // Fin logo — viewBox="0 0 556 196", natural aspect ≈ 2.837
 // ---------------------------------------------------------------------------
-const LOGO_ASPECT = 556 / 196;
+const LOGO_ASPECT = 157 / 92;
 
 let _logoPromise: Promise<HTMLImageElement> | null = null;
 
 function loadLogoImage(): Promise<HTMLImageElement> {
   if (_logoPromise) return _logoPromise;
-  _logoPromise = fetch('/logos/lockup_white.svg')
+  _logoPromise = fetch('/logos/fin_logo.svg')
     .then(r => r.text())
     .then(svgText => new Promise<HTMLImageElement>((resolve, reject) => {
       const img  = new Image();
@@ -81,31 +81,31 @@ interface FormatSpec {
   headlineFloorPx?:    number;   // minimum headlinePx for auto-shrink, at spec size
   layoutStyle?:        'poster'; // editorial: logo top, large headline center, CTA footnote bottom
   textAlign?:          'left' | 'center'; // poster alignment; default: left for W≥H, center for H>W
+  ctaMultiLine?:       boolean;  // allow CTA to wrap to 2 lines (for narrow portrait formats)
 }
 
 const FORMAT_SPECS: Record<string, FormatSpec> = {
   // TTD
   // 300×250 is the reference — no override flags
-  '160x600':   { headlinePx: 80,  ctaPx: 10,    logoH: 14,  layout: 'vertical',   headLS: -0.03, headLH: 0.95, maxWordsPerLine: 2, padXSpec: 20, layoutStyle: 'poster', textAlign: 'center' },
-  '300x250':   { headlinePx: 80,  ctaPx: 7,     logoH: 14,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 2, layoutStyle: 'poster', textAlign: 'left' },
+  '160x600':   { headlinePx: 80,  ctaPx: 13,    logoH: 14,  layout: 'vertical',   headLS: -0.03, headLH: 0.95, maxWordsPerLine: 2, padXSpec: 20, layoutStyle: 'poster', textAlign: 'center', ctaMultiLine: true },
+  '300x250':   { headlinePx: 80,  ctaPx: 7,     logoH: 14,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, layoutStyle: 'poster', textAlign: 'left' },
   '728x90':    { headlinePx: 18,  ctaPx: 10,    logoH: 20,  layout: 'horizontal', headLS: -0.03, headLH: 0.95 },
-  '300x600':   { headlinePx: 120, ctaPx: 10,    logoH: 18,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
-  '320x50':    { headlinePx: 15,  ctaPx: 9,     logoH: 14,  layout: 'horizontal', headLS: -0.03, headLH: 0.95, autoShrinkHeadline: true, headlineFloorPx: 9 },
-  '300x50':    { headlinePx: 15,  ctaPx: 9,     logoH: 14,  layout: 'horizontal', headLS: -0.03, headLH: 0.95, autoShrinkHeadline: true, headlineFloorPx: 9 },
-  '768x1024':  { headlinePx: 160, ctaPx: 13,    logoH: 20,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'center' },
-  '1024x768':  { headlinePx: 160, ctaPx: 13,    logoH: 28,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'left' },
-  '320x480':   { headlinePx: 100, ctaPx: 10,    logoH: 16,  layout: 'vertical',   headLS: -0.06, headLH: 0.95, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
+  '300x600':   { headlinePx: 120, ctaPx: 11.5,  logoH: 20.7,layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
+  '320x50':    { headlinePx: 10,  ctaPx: 6,     logoH: 11,  layout: 'horizontal', headLS: -0.03, headLH: 0.95, autoShrinkHeadline: true, headlineFloorPx: 8 },
+  '300x50':    { headlinePx: 10,  ctaPx: 6,     logoH: 11,  layout: 'horizontal', headLS: -0.03, headLH: 0.95, autoShrinkHeadline: true, headlineFloorPx: 8 },
+  '768x1024':  { headlinePx: 160, ctaPx: 16.9,  logoH: 26,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'center' },
+  '1024x768':  { headlinePx: 160, ctaPx: 15.6,  logoH: 30.8,layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'left' },
+  '320x480':   { headlinePx: 100, ctaPx: 11,    logoH: 17.6,layout: 'vertical',   headLS: -0.06, headLH: 0.95, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
   '970x250':   { headlinePx: 25,  ctaPx: 11,    logoH: 26,  layout: 'horizontal', headLS: -0.03, headLH: 0.95 },
-  '480x320':   { headlinePx: 100, ctaPx: 10,    logoH: 18,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
-  // LinkedIn (+30% headline, max 4 words/line)
-  '1080x1080': { headlinePx: 220, ctaPx: 11,    logoH: 36,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
-  '1200x1200': { headlinePx: 240, ctaPx: 12,    logoH: 40,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
+  '480x320':   { headlinePx: 80,  ctaPx: 10,    logoH: 18,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
+  // LinkedIn
+  '1080x1080': { headlinePx: 176, ctaPx: 13.2,  logoH: 39.6,layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
+  '1200x1200': { headlinePx: 192, ctaPx: 14.4,  logoH: 44,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
   // 6Sense
-  '1200x628':  { headlinePx: 160, ctaPx: 11,    logoH: 28,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'left' },
-  // Meta
-  // 1080×1080 shared with LinkedIn above
-  '1080x1920': { headlinePx: 300, ctaPx: 13,    logoH: 36,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
-  '1920x1080': { headlinePx: 200, ctaPx: 13,    logoH: 40,  layout: 'vertical',   headLS: -0.03, headLH: 0.95, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'left' },
+  '1200x628':  { headlinePx: 144, ctaPx: 11,    logoH: 28,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'left' },
+  // Meta (1080×1080 shared with LinkedIn above)
+  '1080x1920': { headlinePx: 300, ctaPx: 16.9,  logoH: 46.8,layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
+  '1920x1080': { headlinePx: 200, ctaPx: 16.9,  logoH: 40,  layout: 'vertical',   headLS: -0.03, headLH: 0.95, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'left' },
 };
 
 function getSpec(W: number, H: number): FormatSpec {
@@ -308,27 +308,54 @@ function renderPosterLayout(
   const padY     = H * 0.08;
   const maxW     = W - padX * 2;
   const align    = spec.textAlign ?? (isPortrait ? 'center' : 'left');
-  const innerGap = padY * 0.35; // breathing room between logo→headline and headline→CTA
+  const innerGap = padY * 0.35;
 
   // ── Logo (pinned top, small and discrete) ─────────────────────────────────
-  const rawLogoW  = spec.logoH * LOGO_ASPECT;
-  const logoW     = Math.min(rawLogoW, maxW);
-  const logoH     = logoW / LOGO_ASPECT;
-  const logoX     = align === 'left' ? padX : (W - logoW) / 2;
+  const rawLogoW = spec.logoH * LOGO_ASPECT;
+  const logoW    = Math.min(rawLogoW, maxW);
+  const logoH    = logoW / LOGO_ASPECT;
+  const logoX    = align === 'left' ? padX : (W - logoW) / 2;
   ctx.drawImage(logoImg, logoX, padY, logoW, logoH);
 
-  // ── CTA (pinned bottom, footnote-sized) ───────────────────────────────────
-  const ctaPx     = spec.ctaPx ?? spec.headlinePx * 0.15;
-  const ruleH     = Math.max(0.5, ctaPx * 0.05);
-  const ruleGap   = Math.max(1,   ctaPx * 0.15);
-  const ctaBlockH = ctaPx + ruleGap + ruleH;
-  const ctaY      = H - padY - ctaBlockH;
+  // ── CTA pre-measurement (supports multi-line wrapping) ────────────────────
+  const ctaPx    = spec.ctaPx ?? spec.headlinePx * 0.15;
+  const ruleH    = Math.max(0.5, ctaPx * 0.05);
+  const ruleGap  = Math.max(1,   ctaPx * 0.15);
+  const ctaLineH = ctaPx * 1.35;
 
-  if (spec.ctaPx !== null && cta.trim().length > 0) {
-    if (align === 'left') {
-      drawCTALeft(ctx, padX, cta, ctaPx, ctaY, ruleH, ruleGap);
-    } else {
-      drawCTACentered(ctx, W, cta, ctaPx, ctaY, ruleH, ruleGap);
+  let ctaLines: string[] = cta.trim().length > 0 ? [cta] : [];
+  if (spec.ctaMultiLine && ctaLines.length > 0) {
+    setLetterSpacing(ctx, 0);
+    ctx.font = ctaFont(ctaPx);
+    const letterSp = ctaPx * 0.10;
+    const upper    = cta.toUpperCase();
+    const ctaW     = upper.split('').map(c => ctx.measureText(c).width).reduce((s, w) => s + w, 0)
+                     + letterSp * Math.max(0, upper.length - 1);
+    if (ctaW > maxW) {
+      const words = cta.trim().split(/\s+/);
+      if (words.length >= 2) {
+        const mid = Math.ceil(words.length / 2);
+        ctaLines = [words.slice(0, mid).join(' '), words.slice(mid).join(' ')];
+      }
+    }
+  }
+
+  const ctaNumLines = ctaLines.length;
+  const ctaBlockH   = ctaNumLines > 1
+    ? ctaNumLines * ctaLineH + ruleGap + ruleH
+    : (ctaLines.length > 0 ? ctaPx + ruleGap + ruleH : 0);
+  const ctaY = H - padY - ctaBlockH;
+
+  // ── Draw CTA ──────────────────────────────────────────────────────────────
+  if (spec.ctaPx !== null && ctaLines.length > 0) {
+    for (let i = 0; i < ctaLines.length; i++) {
+      const lineY  = ctaY + (ctaNumLines > 1 ? i * ctaLineH : 0);
+      const isLast = i === ctaLines.length - 1;
+      if (align === 'left') {
+        drawCTALeft(ctx, padX, ctaLines[i], ctaPx, lineY, isLast ? ruleH : 0, isLast ? ruleGap : 0);
+      } else {
+        drawCTACentered(ctx, W, ctaLines[i], ctaPx, lineY, isLast ? ruleH : 0, isLast ? ruleGap : 0);
+      }
     }
   }
 
@@ -341,25 +368,32 @@ function renderPosterLayout(
 
   let headlinePx = spec.headlinePx;
   const { headLS, headLH } = spec;
-  const wordsPerLine = spec.maxWordsPerLine ?? (isPortrait ? 3 : 4);
-  const floorPx      = Math.max(14, H * 0.02);
+  // Landscape/square without explicit word limit → pixel-based wrapping fills full width
+  const usePixelWrap = spec.maxWordsPerLine === undefined && !isPortrait;
+  const wordsPerLine  = spec.maxWordsPerLine ?? 3;
+  const floorPx       = Math.max(14, H * 0.02);
 
-  const lines = wrapPortraitText(text, wordsPerLine);
-  if (lines.length === 0) return;
-
-  // Overflow loop: reduce font until block fits in headline zone AND all lines fit maxW
-  while (headlinePx > floorPx) {
+  let lines: string[] = [];
+  // Overflow-reduction loop — re-wraps on each iteration for pixel-based mode
+  while (true) {
     setLetterSpacing(ctx, headLS * headlinePx);
     ctx.font = headlineFont(headlinePx);
+    lines = usePixelWrap
+      ? wrapText(ctx, text, maxW)
+      : wrapPortraitText(text, wordsPerLine);
+    if (lines.length === 0) break;
     const lineH    = headlinePx * headLH;
     const blockH   = textBlockHeight(lines.length, lineH);
     const maxLineW = Math.max(...lines.map(l => ctx.measureText(l).width));
     if (blockH <= headlineZoneH && maxLineW <= maxW) break;
+    if (headlinePx <= floorPx) break;
     headlinePx = Math.max(floorPx, headlinePx - 0.5);
   }
 
-  const lineH     = headlinePx * headLH;
-  const blockH    = textBlockHeight(lines.length, lineH);
+  if (lines.length === 0) return;
+
+  const lineH      = headlinePx * headLH;
+  const blockH     = textBlockHeight(lines.length, lineH);
   const textStartY = headlineZoneTop + (headlineZoneH - blockH) / 2;
 
   ctx.fillStyle    = '#FFFFFF';
