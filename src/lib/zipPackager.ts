@@ -3,16 +3,16 @@
  * All operations are client-side (JSZip).
  */
 
-import type { AssetSpec, GradientParams } from '@/types';
+import type { AssetSpec } from '@/types';
 import { CHANNEL_FILE_LABELS } from './assetSpecs';
 import { renderAdToCanvas, exportWithSizeLimit } from './canvasRenderer';
 
 export interface PackageJob {
-  spec: AssetSpec;
-  text: string;
-  cta: string;
-  gradientParams: GradientParams;
-  projectName: string;
+  spec:          AssetSpec;
+  text:          string;
+  cta:           string;
+  backgroundSrc: string;
+  projectName:   string;
 }
 
 /** Sanitise a string for use in file/folder names */
@@ -49,7 +49,7 @@ export async function buildAndDownloadZip(
   let done    = 0;
 
   for (const job of jobs) {
-    const { spec, text, cta, gradientParams } = job;
+    const { spec, text, cta, backgroundSrc } = job;
     const channel  = CHANNEL_FILE_LABELS[spec.channel];
     const size     = `${spec.width}x${spec.height}`;
     const baseName = `${project}_Display_${channel}-${size}_${today}`;
@@ -57,7 +57,7 @@ export async function buildAndDownloadZip(
 
     // Render at full resolution
     const canvas = document.createElement('canvas');
-    await renderAdToCanvas(canvas, spec.width, spec.height, text, cta, gradientParams);
+    await renderAdToCanvas(canvas, spec.width, spec.height, text, cta, backgroundSrc);
 
     // JPEG
     const jpgBlob = await exportWithSizeLimit(canvas, 'jpg', maxBytes);

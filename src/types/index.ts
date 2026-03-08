@@ -36,12 +36,13 @@ export interface GradientParams {
 }
 
 export interface FormState {
-  projectName: string;
-  text: string;
-  cta: string;
-  activeSet: AssetSetKey;
+  projectName:   string;
+  text:          string;
+  cta:           string;
+  activeSet:     AssetSetKey;
   /** Selected spec keys when user has deselected individual sizes */
-  selectedKeys: Set<string>;
+  selectedKeys:  Set<string>;
+  backgroundSrc: string;
 }
 
 export interface GeneratedAd {

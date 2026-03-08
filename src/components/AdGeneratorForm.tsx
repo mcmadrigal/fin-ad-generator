@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import type { AssetSetKey, FormState } from '@/types';
 import { ASSET_SPECS, CHANNEL_LABELS, ALL_CHANNELS, getSpecsForSet } from '@/lib/assetSpecs';
 import { countWords } from '@/lib/textLayout';
+import { BG_IMAGES } from '@/lib/bgImages';
 
 const SET_OPTIONS: Array<{ key: AssetSetKey; label: string }> = [
   { key: 'full',     label: 'Full Set' },
@@ -23,18 +24,18 @@ interface Props {
 }
 
 export function AdGeneratorForm({ onGenerate, generating }: Props) {
-  const [projectName, setProjectName] = useState('');
-  const [text, setText]               = useState('');
-  const [cta, setCta]                 = useState('');
-  const [activeSet, setActiveSet]     = useState<AssetSetKey>('full');
-  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(initialSelectedKeys('full'));
+  const [projectName,   setProjectName]   = useState('');
+  const [text,          setText]          = useState('');
+  const [cta,           setCta]           = useState('');
+  const [activeSet,     setActiveSet]     = useState<AssetSetKey>('full');
+  const [selectedKeys,  setSelectedKeys]  = useState<Set<string>>(initialSelectedKeys('full'));
+  const [backgroundSrc, setBackgroundSrc] = useState(BG_IMAGES[0].src);
 
   const textWords = countWords(text);
   const ctaWords  = countWords(cta);
   const textError = textWords > 12;
   const ctaError  = ctaWords  > 4;
 
-  // When the set changes, reset selectedKeys to all specs in that set
   const handleSetChange = useCallback((setKey: AssetSetKey) => {
     setActiveSet(setKey);
     setSelectedKeys(initialSelectedKeys(setKey));
@@ -43,11 +44,7 @@ export function AdGeneratorForm({ onGenerate, generating }: Props) {
   const toggleSize = useCallback((key: string) => {
     setSelectedKeys(prev => {
       const next = new Set(prev);
-      if (next.has(key)) {
-        next.delete(key);
-      } else {
-        next.add(key);
-      }
+      if (next.has(key)) next.delete(key); else next.add(key);
       return next;
     });
   }, []);
@@ -64,10 +61,9 @@ export function AdGeneratorForm({ onGenerate, generating }: Props) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!canGenerate) return;
-    onGenerate({ projectName, text, cta, activeSet, selectedKeys });
+    onGenerate({ projectName, text, cta, activeSet, selectedKeys, backgroundSrc });
   };
 
-  // Channels to display checkboxes for
   const channelsToShow = activeSet === 'full' ? ALL_CHANNELS : [activeSet as typeof ALL_CHANNELS[number]];
 
   return (
@@ -107,9 +103,7 @@ export function AdGeneratorForm({ onGenerate, generating }: Props) {
           style={{ resize: 'vertical', minHeight: '72px' }}
         />
         {textError && (
-          <p className="mt-1" style={{ fontSize: '0.7rem', color: 'var(--orange)' }}>
-            Max 12 words
-          </p>
+          <p className="mt-1" style={{ fontSize: '0.7rem', color: 'var(--orange)' }}>Max 12 words</p>
         )}
       </div>
 
@@ -130,10 +124,41 @@ export function AdGeneratorForm({ onGenerate, generating }: Props) {
           maxLength={60}
         />
         {ctaError && (
-          <p className="mt-1" style={{ fontSize: '0.7rem', color: 'var(--orange)' }}>
-            Max 4 words
-          </p>
+          <p className="mt-1" style={{ fontSize: '0.7rem', color: 'var(--orange)' }}>Max 4 words</p>
         )}
+      </div>
+
+      {/* ── Background selector ───────────────────────────────────────── */}
+      <div>
+        <label className="block mb-3" style={{ fontSize: '0.75rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--navy-40)' }}>
+          Background
+        </label>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
+          {BG_IMAGES.map(bg => (
+            <button
+              key={bg.src}
+              type="button"
+              onClick={() => setBackgroundSrc(bg.src)}
+              style={{
+                border:       `2px solid ${backgroundSrc === bg.src ? 'var(--orange)' : 'var(--navy-20)'}`,
+                borderRadius: '3px',
+                cursor:       'pointer',
+                overflow:     'hidden',
+                padding:      0,
+                aspectRatio:  '16 / 9',
+                transition:   'border-color 150ms ease',
+              }}
+              title={bg.label}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={bg.src}
+                alt={bg.label}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* ── Asset set selector ────────────────────────────────────────── */}
@@ -148,17 +173,17 @@ export function AdGeneratorForm({ onGenerate, generating }: Props) {
               type="button"
               onClick={() => handleSetChange(opt.key)}
               style={{
-                background:   activeSet === opt.key ? 'var(--orange)' : 'transparent',
-                border:       `1px solid ${activeSet === opt.key ? 'var(--orange)' : 'var(--navy-20)'}`,
-                borderRadius: '3px',
-                color:        activeSet === opt.key ? '#000' : 'var(--stark-white)',
-                cursor:       'pointer',
-                fontSize:     '0.75rem',
-                fontWeight:   '500',
-                letterSpacing:'0.06em',
-                padding:      '0.375rem 0.875rem',
-                textTransform:'uppercase',
-                transition:   'all 150ms ease',
+                background:    activeSet === opt.key ? 'var(--orange)' : 'transparent',
+                border:        `1px solid ${activeSet === opt.key ? 'var(--orange)' : 'var(--navy-20)'}`,
+                borderRadius:  '3px',
+                color:         activeSet === opt.key ? '#000' : 'var(--stark-white)',
+                cursor:        'pointer',
+                fontSize:      '0.75rem',
+                fontWeight:    '500',
+                letterSpacing: '0.06em',
+                padding:       '0.375rem 0.875rem',
+                textTransform: 'uppercase',
+                transition:    'all 150ms ease',
               }}
             >
               {opt.label}

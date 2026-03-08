@@ -1,6 +1,6 @@
 'use client';
 
-import type { AssetSpec, GradientParams } from '@/types';
+import type { AssetSpec } from '@/types';
 import { CHANNEL_LABELS, ALL_CHANNELS } from '@/lib/assetSpecs';
 import { CanvasAd } from './CanvasAd';
 import { DownloadButton } from './DownloadButton';
@@ -9,13 +9,13 @@ interface Props {
   specs:             AssetSpec[];
   text:              string;
   cta:               string;
-  gradientParams:    GradientParams;
+  backgroundSrc:     string;
   projectName:       string;
   onRegenBackground: () => void;
 }
 
 export function PreviewGrid({
-  specs, text, cta, gradientParams, projectName, onRegenBackground,
+  specs, text, cta, backgroundSrc, projectName, onRegenBackground,
 }: Props) {
   // Group specs by channel, preserving channel order
   const byChannel = ALL_CHANNELS.reduce<Record<string, AssetSpec[]>>((acc, ch) => {
@@ -51,13 +51,13 @@ export function PreviewGrid({
             className="btn-secondary"
             onClick={onRegenBackground}
           >
-            Regenerate Background
+            Next Background
           </button>
           <DownloadButton
             specs={specs}
             text={text}
             cta={cta}
-            gradientParams={gradientParams}
+            backgroundSrc={backgroundSrc}
             projectName={projectName}
             disabled={!hasSpecs}
           />
@@ -81,7 +81,7 @@ export function PreviewGrid({
                   spec={spec}
                   text={text}
                   cta={cta}
-                  gradientParams={gradientParams}
+                  backgroundSrc={backgroundSrc}
                 />
                 <span className="size-label">{spec.label}</span>
               </div>

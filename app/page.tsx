@@ -1,19 +1,19 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import type { FormState, GradientParams } from '@/types';
+import type { FormState } from '@/types';
 import type { AssetSpec } from '@/types';
 import { getAllSpecs } from '@/lib/assetSpecs';
-import { generateGradientParams } from '@/lib/gradientEngine';
+import { BG_IMAGES } from '@/lib/bgImages';
 import { AdGeneratorForm } from '@/components/AdGeneratorForm';
 import { PreviewGrid } from '@/components/PreviewGrid';
 
 interface GeneratedState {
-  specs:          AssetSpec[];
-  text:           string;
-  cta:            string;
-  gradientParams: GradientParams;
-  projectName:    string;
+  specs:         AssetSpec[];
+  text:          string;
+  cta:           string;
+  backgroundSrc: string;
+  projectName:   string;
 }
 
 export default function HomePage() {
@@ -26,14 +26,13 @@ export default function HomePage() {
 
     const allSpecs    = getAllSpecs();
     const activeSpecs = allSpecs.filter(s => form.selectedKeys.has(s.key));
-    const params      = generateGradientParams();
 
     setGenerated({
-      specs:          activeSpecs,
-      text:           form.text,
-      cta:            form.cta,
-      gradientParams: params,
-      projectName:    form.projectName,
+      specs:         activeSpecs,
+      text:          form.text,
+      cta:           form.cta,
+      backgroundSrc: form.backgroundSrc,
+      projectName:   form.projectName,
     });
     setGenerating(false);
 
@@ -43,7 +42,12 @@ export default function HomePage() {
   }, []);
 
   const handleRegenBackground = useCallback(() => {
-    setGenerated(prev => prev ? { ...prev, gradientParams: generateGradientParams() } : prev);
+    setGenerated(prev => {
+      if (!prev) return prev;
+      const idx  = BG_IMAGES.findIndex(b => b.src === prev.backgroundSrc);
+      const next = BG_IMAGES[(idx + 1) % BG_IMAGES.length];
+      return { ...prev, backgroundSrc: next.src };
+    });
   }, []);
 
   return (
@@ -58,7 +62,6 @@ export default function HomePage() {
           margin: '0 auto',
           width: '100%',
         }}>
-          {/* Real Fin lockup (white variant) */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/logos/lockup_white.svg"
@@ -132,7 +135,7 @@ export default function HomePage() {
               specs={generated.specs}
               text={generated.text}
               cta={generated.cta}
-              gradientParams={generated.gradientParams}
+              backgroundSrc={generated.backgroundSrc}
               projectName={generated.projectName}
               onRegenBackground={handleRegenBackground}
             />

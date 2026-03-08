@@ -1,20 +1,20 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import type { AssetSpec, GradientParams } from '@/types';
+import type { AssetSpec } from '@/types';
 import { buildAndDownloadZip } from '@/lib/zipPackager';
 
 interface Props {
   specs:          AssetSpec[];
   text:           string;
   cta:            string;
-  gradientParams: GradientParams;
+  backgroundSrc:  string;
   projectName:    string;
   disabled?:      boolean;
 }
 
 export function DownloadButton({
-  specs, text, cta, gradientParams, projectName, disabled,
+  specs, text, cta, backgroundSrc, projectName, disabled,
 }: Props) {
   const [progress,    setProgress]    = useState<{ done: number; total: number } | null>(null);
   const [downloading, setDownloading] = useState(false);
@@ -26,7 +26,7 @@ export function DownloadButton({
 
     try {
       await buildAndDownloadZip(
-        specs.map(spec => ({ spec, text, cta, gradientParams, projectName })),
+        specs.map(spec => ({ spec, text, cta, backgroundSrc, projectName })),
         (done, total) => setProgress({ done, total }),
       );
     } catch (err) {
@@ -36,7 +36,7 @@ export function DownloadButton({
       setDownloading(false);
       setProgress(null);
     }
-  }, [downloading, specs, text, cta, gradientParams, projectName]);
+  }, [downloading, specs, text, cta, backgroundSrc, projectName]);
 
   const isDisabled = disabled || downloading || specs.length === 0;
   const pct = progress ? Math.round((progress.done / progress.total) * 100) : 0;
@@ -55,13 +55,13 @@ export function DownloadButton({
           <span
             aria-hidden
             style={{
-              background:   'rgba(0,0,0,0.18)',
+              background:  'rgba(0,0,0,0.18)',
               bottom:       0,
               left:         0,
-              position:     'absolute',
+              position:    'absolute',
               top:          0,
-              transition:   'width 200ms ease',
-              width:        `${pct}%`,
+              transition:  'width 200ms ease',
+              width:       `${pct}%`,
             }}
           />
         )}

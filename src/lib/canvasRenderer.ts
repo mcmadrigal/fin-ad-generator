@@ -1,17 +1,19 @@
 /**
  * Core canvas rendering engine for Fin ad generator.
  * All rendering is client-side; this file must only be imported from client components.
+ *
+ * Background : cover-fit image + rgba(10,14,26,0.50) dark overlay
+ * Typography : format-aware scaling  (display / banner / tall-narrow)
+ * Layout     : vertical thirds (standard) | horizontal (banner)
+ * CTA        : all-caps tracked text + thin underline rule — no button
  */
 
-import type { GradientParams } from '@/types';
-import { drawGradientBackground, enforceContrast } from './gradientEngine';
-import { calcFontSize, wrapText, textBlockHeight } from './textLayout';
+import { wrapText, textBlockHeight } from './textLayout';
 
 // ---------------------------------------------------------------------------
-// Real Fin logo — fetched from /public/logos/lockup_white.svg at runtime.
-// The SVG has viewBox="0 0 556 196" (aspect ≈ 2.837).
+// Fin logo (white lockup) — viewBox="0 0 556 196", aspect ≈ 2.837
 // ---------------------------------------------------------------------------
-const LOGO_ASPECT = 556 / 196; // real lockup aspect ratio
+const LOGO_ASPECT = 556 / 196;
 
 let _logoPromise: Promise<HTMLImageElement> | null = null;
 
@@ -31,19 +33,86 @@ function loadLogoImage(): Promise<HTMLImageElement> {
 }
 
 // ---------------------------------------------------------------------------
-// Font helpers — use actual brand fonts loaded via @font-face in globals.css
-// Brand typography mapping:
-//   Ad copy (headline/text):  Ivory LL Light 300 — editorial display serif
-//   CTA:                      Aeonik Fono 400 — ALL CAPS accent mono-grotesk
+// Background image cache
+// ---------------------------------------------------------------------------
+const _bgCache = new Map<string, HTMLImageElement>();
+
+function loadBgImage(src: string): Promise<HTMLImageElement> {
+  if (_bgCache.has(src)) return Promise.resolve(_bgCache.get(src)!);
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload  = () => { _bgCache.set(src, img); resolve(img); };
+    img.onerror = () => reject(new Error(`Failed to load background: ${src}`));
+    img.src = src;
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Brand font stacks
 // ---------------------------------------------------------------------------
 const HEADLINE_FONT_STACK = "'Ivory LL', Georgia, 'Times New Roman', serif";
 const CTA_FONT_STACK      = "'Aeonik Fono', 'Medium LL', -apple-system, sans-serif";
 
-function headlineFont(size: number): string {
-  return `300 ${size}px ${HEADLINE_FONT_STACK}`;
+function headlineFont(size: number): string { return `300 ${size}px ${HEADLINE_FONT_STACK}`; }
+function ctaFont(size: number):     string  { return `400 ${size}px ${CTA_FONT_STACK}`; }
+
+// ---------------------------------------------------------------------------
+// Format classification
+// ---------------------------------------------------------------------------
+type AdFormat = 'banner' | 'tall-narrow' | 'display';
+
+function classifyFormat(W: number, H: number): AdFormat {
+  if (H <= 250 && W >= H * 2.5) return 'banner';
+  if (W <= 200 && H >= W * 2)   return 'tall-narrow';
+  return 'display';
 }
-function ctaFont(size: number): string {
-  return `400 ${size}px ${CTA_FONT_STACK}`;
+
+// ---------------------------------------------------------------------------
+// Font size helpers
+// ---------------------------------------------------------------------------
+
+/** Format-aware headline size, clamped 11–64px */
+function calcHeadlinePx(W: number, H: number, fmt: AdFormat): number {
+  let size: number;
+  if      (fmt === 'banner')       size = H * 0.55;
+  else if (fmt === 'tall-narrow')  size = Math.min(W * 0.18, 22);
+  else                             size = Math.min(W, H) * 0.09;
+  return Math.max(11, Math.min(64, size));
+}
+
+/** Logo height: min(w,h) × 0.12, never > 48px; banner also caps at H × 0.50 */
+function calcLogoPx(W: number, H: number, fmt: AdFormat): number {
+  let h = Math.min(W, H) * 0.12;
+  h = Math.min(h, 48);
+  if (fmt === 'banner') h = Math.min(h, H * 0.50);
+  return Math.max(6, h);
+}
+
+/** CTA = headline × 0.4, clamped 11–64px */
+function calcCtaPx(headlinePx: number): number {
+  return Math.max(11, Math.min(64, headlinePx * 0.4));
+}
+
+// ---------------------------------------------------------------------------
+// Background: cover-fit + deep navy overlay
+// ---------------------------------------------------------------------------
+function drawCoverBackground(
+  ctx: CanvasRenderingContext2D,
+  W: number, H: number,
+  img: HTMLImageElement,
+): void {
+  const scaleX = W / img.naturalWidth;
+  const scaleY = H / img.naturalHeight;
+  const scale  = Math.max(scaleX, scaleY); // cover — never letterbox
+  const dw = img.naturalWidth  * scale;
+  const dh = img.naturalHeight * scale;
+  const dx = (W - dw) / 2;
+  const dy = (H - dh) / 2;
+  ctx.drawImage(img, dx, dy, dw, dh);
+
+  // Deep navy overlay at 50% opacity
+  ctx.fillStyle = 'rgba(10,14,26,0.50)';
+  ctx.fillRect(0, 0, W, H);
 }
 
 // ---------------------------------------------------------------------------
@@ -60,7 +129,7 @@ export async function renderAdToCanvas(
   height: number,
   text: string,
   cta: string,
-  gradientParams: GradientParams,
+  backgroundSrc: string,
 ): Promise<void> {
   canvas.width  = Math.round(width);
   canvas.height = Math.round(height);
@@ -71,265 +140,206 @@ export async function renderAdToCanvas(
   const W = canvas.width;
   const H = canvas.height;
 
-  // 1. Background
-  drawGradientBackground(ctx, W, H, gradientParams);
-  enforceContrast(ctx, W, H, 4.5);
+  // 1. Background image + overlay
+  const bgImg = await loadBgImage(backgroundSrc);
+  drawCoverBackground(ctx, W, H, bgImg);
 
   // 2. Wait for fonts to be ready in the browser
-  if (typeof document !== 'undefined') {
-    await document.fonts.ready;
-  }
+  if (typeof document !== 'undefined') await document.fonts.ready;
 
   // 3. Load logo
   const logoImg = await loadLogoImage();
 
-  // 4. Choose layout based on proportions
-  if (H <= 70) {
-    await renderUltraShortBanner(ctx, W, H, text, cta, logoImg);
-  } else if (H <= 130 && W > H * 2.5) {
-    await renderShortBanner(ctx, W, H, text, cta, logoImg);
+  // 4. Route to the correct layout
+  const fmt = classifyFormat(W, H);
+  if (fmt === 'banner') {
+    renderBannerLayout(ctx, W, H, text, cta, logoImg);
   } else {
-    await renderStandardLayout(ctx, W, H, text, cta, logoImg);
+    renderStandardLayout(ctx, W, H, text, cta, logoImg, fmt);
   }
 }
 
 // ---------------------------------------------------------------------------
-// Ultra-short banner (h ≤ 70px): e.g. 320×50, 300×50
-// Single horizontal strip: logo-icon | text | CTA-pill
+// Standard layout: vertical thirds
+// Logo → top third | Headline → middle third | CTA → bottom third
 // ---------------------------------------------------------------------------
-async function renderUltraShortBanner(
+function renderStandardLayout(
   ctx: CanvasRenderingContext2D,
   W: number, H: number,
   text: string, cta: string,
   logoImg: HTMLImageElement,
-): Promise<void> {
-  const pad = Math.max(H * 0.1, 3);
-  const innerH = H - pad * 2;
+  fmt: AdFormat,
+): void {
+  const pad      = H * 0.08;
+  const contentH = H - pad * 2;
+  const thirdH   = contentH / 3;
 
-  // Logo icon portion only (leftmost ~40px of SVG contains the asterisk mark)
-  const iconW = innerH * 1.0; // roughly square
-  ctx.drawImage(logoImg, 0, 0, 70, 44, pad, pad, iconW, innerH); // src: first 70px of 180px SVG
+  // ── Logo (top third, centered) ────────────────────────────────────────────
+  const rawLogoH   = calcLogoPx(W, H, fmt);
+  const rawLogoW   = rawLogoH * LOGO_ASPECT;
+  const maxLogoW   = W - pad * 2;
+  const finalLogoW = Math.min(rawLogoW, maxLogoW);
+  const finalLogoH = finalLogoW / LOGO_ASPECT;
+  const logoX      = (W - finalLogoW) / 2;
+  const logoY      = (pad + thirdH / 2) - finalLogoH / 2;
+  ctx.drawImage(logoImg, logoX, logoY, finalLogoW, finalLogoH);
 
-  // CTA pill on right
-  const ctaSize = calcFontSize(H, 0.30, 7, 12);
-  ctx.font = ctaFont(ctaSize);
-  const ctaDisplay = cta.toUpperCase();
-  const ctaMetrics = ctx.measureText(ctaDisplay);
-  const pillPadX = ctaSize * 0.9;
-  const pillW    = ctaMetrics.width + pillPadX * 2;
-  const pillX    = W - pad - pillW;
-  const pillY    = pad;
-  const pillH    = innerH;
+  // ── Font sizes ─────────────────────────────────────────────────────────────
+  const headlinePx = calcHeadlinePx(W, H, fmt);
+  const ctaPx      = calcCtaPx(headlinePx);
 
-  ctx.fillStyle = '#FF5600';
-  roundRect(ctx, pillX, pillY, pillW, pillH, 2);
-  ctx.fill();
+  // ── CTA (anchored at bottom of bottom third) ───────────────────────────────
+  const ruleH   = Math.max(0.5, H * 0.0012);
+  const ruleGap = Math.max(2, ctaPx * 0.2);
+  const ctaY    = H - pad - ctaPx - ruleGap - ruleH;
+  drawCtaCentered(ctx, W, cta, ctaPx, ctaY, ruleH, ruleGap);
 
-  ctx.fillStyle = '#000000';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(ctaDisplay, pillX + pillW / 2, H / 2);
+  // ── Headline (middle third, centered, auto-reduce font if overflow) ────────
+  const midTop  = pad + thirdH;
+  const midH    = thirdH;
+  const maxW    = W - pad * 2.5;
 
-  // Text in the middle
-  const textSize = calcFontSize(H, 0.25, 7, 12);
-  ctx.font = headlineFont(textSize);
-  ctx.fillStyle = '#FFFFFF';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  const textAreaStart = pad + iconW + pad;
-  const textAreaEnd   = pillX - pad;
-  const textAreaW     = textAreaEnd - textAreaStart;
-  if (textAreaW > 20) {
-    let displayText = text;
-    while (ctx.measureText(displayText).width > textAreaW && displayText.includes(' ')) {
-      displayText = displayText.substring(0, displayText.lastIndexOf(' ')) + '…';
-    }
-    ctx.fillText(displayText, textAreaStart + textAreaW / 2, H / 2);
-  }
-}
+  let fontSize = headlinePx;
+  ctx.font = headlineFont(fontSize);
+  let lines = wrapText(ctx, text, maxW);
 
-// ---------------------------------------------------------------------------
-// Short/wide banner (70 < h ≤ 130, w > h*2.5): e.g. 728×90, 970×250
-// Horizontal: logo-left | headline-centre | CTA-right
-// ---------------------------------------------------------------------------
-async function renderShortBanner(
-  ctx: CanvasRenderingContext2D,
-  W: number, H: number,
-  text: string, cta: string,
-  logoImg: HTMLImageElement,
-): Promise<void> {
-  const pad = Math.max(H * 0.12, 6);
-
-  // Logo on left (full lockup)
-  const logoH = H - pad * 2;
-  const logoW = Math.min(logoH * LOGO_ASPECT, W * 0.22);
-  const logoX = pad;
-  const logoY = pad;
-  ctx.drawImage(logoImg, logoX, logoY, logoW, logoH);
-
-  // CTA pill on right
-  const ctaSize = calcFontSize(H, 0.22, 9, 16);
-  ctx.font = ctaFont(ctaSize);
-  const ctaDisplay = cta.toUpperCase();
-  const ctaMetrics = ctx.measureText(ctaDisplay);
-  const pillPadX = ctaSize * 1.1;
-  const pillPadY = ctaSize * 0.55;
-  const pillW    = ctaMetrics.width + pillPadX * 2;
-  const pillH    = ctaSize + pillPadY * 2;
-  const pillX    = W - pad - pillW;
-  const pillY    = (H - pillH) / 2;
-
-  ctx.fillStyle = '#FF5600';
-  roundRect(ctx, pillX, pillY, pillW, pillH, 3);
-  ctx.fill();
-
-  ctx.fillStyle = '#000000';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(ctaDisplay, pillX + pillW / 2, pillY + pillH / 2);
-
-  // Headline text centered in remaining space
-  const textSize = calcFontSize(H, 0.26, 10, 20);
-  ctx.font = headlineFont(textSize);
-  ctx.fillStyle = '#FFFFFF';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  const midX    = logoX + logoW + pad + (pillX - logoX - logoW - pad * 2) / 2;
-  const midY    = H / 2;
-  const availW  = pillX - logoX - logoW - pad * 4;
-
-  let displayText = text;
-  while (ctx.measureText(displayText).width > availW && displayText.includes(' ')) {
-    displayText = displayText.substring(0, displayText.lastIndexOf(' ')) + '…';
-  }
-  if (availW > 20) ctx.fillText(displayText, midX, midY);
-}
-
-// ---------------------------------------------------------------------------
-// Standard layout: logo top | headline middle | CTA bottom
-// Handles all remaining sizes including very narrow (160×600) and square/portrait.
-// ---------------------------------------------------------------------------
-async function renderStandardLayout(
-  ctx: CanvasRenderingContext2D,
-  W: number, H: number,
-  text: string, cta: string,
-  logoImg: HTMLImageElement,
-): Promise<void> {
-  const minDim  = Math.min(W, H);
-  const safePad = Math.max(minDim * 0.06, 10);
-
-  // ── Logo ──────────────────────────────────────────────────────────────────
-  const logoMaxW = Math.min(W * 0.40, 160);
-  const logoW    = logoMaxW;
-  const logoH    = logoW / LOGO_ASPECT;
-  const clampedLogoH = Math.min(logoH, H * 0.18);
-  const clampedLogoW = clampedLogoH * LOGO_ASPECT;
-  const logoX    = (W - clampedLogoW) / 2;
-  const logoY    = safePad;
-  ctx.drawImage(logoImg, logoX, logoY, clampedLogoW, clampedLogoH);
-
-  // ── CTA ───────────────────────────────────────────────────────────────────
-  const ctaSize    = calcFontSize(H, 0.035, 10, 18);
-  const ctaDisplay = cta.toUpperCase();
-  ctx.font      = ctaFont(ctaSize);
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'top';
-
-  const ctaMetrics  = ctx.measureText(ctaDisplay);
-  const ctaLineH    = ctaSize * 1.5; // space for text + underline
-  const ctaBlockH   = ctaLineH + 4;  // underline + gap
-  const ctaY        = H - safePad - ctaBlockH;
-
-  // ── Headline ──────────────────────────────────────────────────────────────
-  const logoZoneBottom = logoY + clampedLogoH + safePad;
-  const ctaZoneTop     = ctaY - safePad;
-  const textZoneH      = ctaZoneTop - logoZoneBottom;
-
-  const textSize = calcFontSize(H, 0.08, 14, 72);
-  const lineH    = textSize * 1.22;
-
-  ctx.font = headlineFont(textSize);
-  const maxTextW = W - safePad * 2.5;
-  const lines    = wrapText(ctx, text, maxTextW);
-  const blockH   = textBlockHeight(lines.length, lineH);
-
-  // Centre text block within text zone
-  let textStartY = logoZoneBottom + (textZoneH - blockH) / 2;
-  // Guard: never overlap logo or CTA zones
-  textStartY = Math.max(textStartY, logoZoneBottom);
-  if (textStartY + blockH > ctaZoneTop - safePad * 0.5) {
-    // Compress: just put it right after logo zone with safe padding
-    textStartY = logoZoneBottom;
+  // Reduce font size until block fits within the middle third
+  while (fontSize > 11 && textBlockHeight(lines.length, fontSize * 1.22) > midH * 0.92) {
+    fontSize = Math.max(11, fontSize - 1);
+    ctx.font = headlineFont(fontSize);
+    lines = wrapText(ctx, text, maxW);
   }
 
+  const blockH     = textBlockHeight(lines.length, fontSize * 1.22);
+  const textStartY = midTop + midH / 2 - blockH / 2;
+
+  ctx.font         = headlineFont(fontSize);
   ctx.fillStyle    = '#FFFFFF';
   ctx.textAlign    = 'center';
   ctx.textBaseline = 'top';
 
   for (let i = 0; i < lines.length; i++) {
-    ctx.fillText(lines[i], W / 2, textStartY + i * lineH);
+    ctx.fillText(lines[i], W / 2, textStartY + i * (fontSize * 1.22));
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Banner layout: logo left | text center (no wrap) | CTA right
+// ---------------------------------------------------------------------------
+function renderBannerLayout(
+  ctx: CanvasRenderingContext2D,
+  W: number, H: number,
+  text: string, cta: string,
+  logoImg: HTMLImageElement,
+): void {
+  const pad    = H * 0.08;
+  const midY   = H / 2;
+  const innerH = H - pad * 2;
+
+  const headlinePx = calcHeadlinePx(W, H, 'banner');
+  const ctaPx      = calcCtaPx(headlinePx);
+
+  // ── Logo (left, vertically centered) ─────────────────────────────────────
+  const rawLogoH = Math.min(innerH * 0.70, calcLogoPx(W, H, 'banner'));
+  const rawLogoW = rawLogoH * LOGO_ASPECT;
+  const logoW    = Math.min(rawLogoW, W * 0.22);
+  const logoH    = logoW / LOGO_ASPECT;
+  const logoX    = pad;
+  const logoY    = midY - logoH / 2;
+  ctx.drawImage(logoImg, logoX, logoY, logoW, logoH);
+
+  // ── CTA (right, right-aligned, vertically centered) ───────────────────────
+  ctx.font = ctaFont(ctaPx);
+  const ctaDisplay = cta.toUpperCase();
+  const letterSp   = ctaPx * 0.18;
+  const chars      = ctaDisplay.split('');
+  const charWidths = chars.map(c => ctx.measureText(c).width);
+  const ctaTextW   = charWidths.reduce((s, w) => s + w, 0) + letterSp * Math.max(0, chars.length - 1);
+  const ruleH      = Math.max(0.5, H * 0.012);
+  const ruleGap    = Math.max(1, ctaPx * 0.2);
+  const ctaTotalH  = ctaPx + ruleGap + ruleH;
+  const ctaTextY   = midY - ctaTotalH / 2;
+
+  ctx.fillStyle    = '#FFFFFF';
+  ctx.textBaseline = 'top';
+  let cx = W - pad - ctaTextW;
+  for (let i = 0; i < chars.length; i++) {
+    ctx.fillText(chars[i], cx, ctaTextY);
+    cx += charWidths[i] + letterSp;
   }
 
-  // ── CTA text + underline rule ──────────────────────────────────────────────
-  ctx.font         = ctaFont(ctaSize);
-  ctx.fillStyle    = '#FFFFFF';
-  ctx.textAlign    = 'center';
-  ctx.textBaseline = 'top';
-
-  // Simulate letter-spacing by distributing characters
-  drawSpacedText(ctx, ctaDisplay, W / 2, ctaY, ctaSize * 0.12);
-
-  // Thin rule beneath CTA (matches editorial visual language in reference images)
-  const ruleW  = ctaMetrics.width + ctaSize * 0.24 * (ctaDisplay.length - 1) + ctaSize * 0.8;
-  const ruleY  = ctaY + ctaSize + 5;
-  const ruleX  = W / 2 - ruleW / 2;
-
+  // Underline rule beneath CTA
+  const ruleW = ctaTextW + ctaPx * 0.4;
+  const ruleX = W - pad - ruleW;
+  const ruleY = ctaTextY + ctaPx + ruleGap;
   ctx.beginPath();
   ctx.moveTo(ruleX, ruleY);
   ctx.lineTo(ruleX + ruleW, ruleY);
-  ctx.strokeStyle = 'rgba(255,255,255,0.55)';
-  ctx.lineWidth   = Math.max(0.5, H * 0.0008);
+  ctx.strokeStyle = 'rgba(255,255,255,0.60)';
+  ctx.lineWidth   = ruleH;
   ctx.stroke();
-}
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+  // ── Headline (center zone, single line, truncate with ellipsis) ───────────
+  const textStart  = logoX + logoW + pad;
+  const textEnd    = ruleX - pad;
+  const textAvailW = textEnd - textStart;
 
-/** Draw text with manual letter spacing (canvas letterSpacing not universally reliable) */
-function drawSpacedText(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  centerX: number,
-  y: number,
-  spacing: number,
-): void {
-  const chars  = text.split('');
-  const widths = chars.map(c => ctx.measureText(c).width);
-  const totalW = widths.reduce((s, w) => s + w, 0) + spacing * (chars.length - 1);
-  let x = centerX - totalW / 2;
-  for (let i = 0; i < chars.length; i++) {
-    ctx.fillText(chars[i], x + widths[i] / 2, y);
-    x += widths[i] + spacing;
+  if (textAvailW > 20) {
+    ctx.font         = headlineFont(headlinePx);
+    ctx.fillStyle    = '#FFFFFF';
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+
+    let displayText = text;
+    while (ctx.measureText(displayText).width > textAvailW && displayText.length > 1) {
+      const lastSpace = displayText.lastIndexOf(' ');
+      if (lastSpace > 0) {
+        displayText = displayText.substring(0, lastSpace) + '…';
+      } else {
+        displayText = displayText.slice(0, -2) + '…';
+      }
+    }
+    ctx.fillText(displayText, textStart + textAvailW / 2, midY);
   }
 }
 
-/** Draw a rounded rectangle path (does not fill/stroke) */
-function roundRect(
+// ---------------------------------------------------------------------------
+// CTA helper (standard layout): centered, tracked uppercase + thin underline
+// ---------------------------------------------------------------------------
+function drawCtaCentered(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, w: number, h: number, r: number,
+  W: number,
+  cta: string,
+  ctaPx: number,
+  ctaY: number,
+  ruleH: number,
+  ruleGap: number,
 ): void {
+  ctx.font = ctaFont(ctaPx);
+  const ctaDisplay = cta.toUpperCase();
+  const letterSp   = ctaPx * 0.18;
+  const chars      = ctaDisplay.split('');
+  const charWidths = chars.map(c => ctx.measureText(c).width);
+  const totalW     = charWidths.reduce((s, w) => s + w, 0) + letterSp * Math.max(0, chars.length - 1);
+
+  ctx.fillStyle    = '#FFFFFF';
+  ctx.textBaseline = 'top';
+  let x = W / 2 - totalW / 2;
+  for (let i = 0; i < chars.length; i++) {
+    ctx.fillText(chars[i], x, ctaY);
+    x += charWidths[i] + letterSp;
+  }
+
+  // Thin underline rule beneath CTA
+  const ruleW = totalW + ctaPx * 0.4;
+  const ruleX = W / 2 - ruleW / 2;
+  const ruleY = ctaY + ctaPx + ruleGap;
   ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
+  ctx.moveTo(ruleX, ruleY);
+  ctx.lineTo(ruleX + ruleW, ruleY);
+  ctx.strokeStyle = 'rgba(255,255,255,0.60)';
+  ctx.lineWidth   = ruleH;
+  ctx.stroke();
 }
 
 // ---------------------------------------------------------------------------
@@ -361,7 +371,6 @@ export async function exportWithSizeLimit(
 ): Promise<Blob> {
   if (format === 'png') {
     const blob = await canvasToBlob(canvas, 'image/png');
-    // PNG is lossless — if it exceeds the limit, fall back to high-quality JPEG
     if (blob.size <= maxBytes) return blob;
     return compressJpeg(canvas, maxBytes);
   }
@@ -371,7 +380,6 @@ export async function exportWithSizeLimit(
 async function compressJpeg(canvas: HTMLCanvasElement, maxBytes: number): Promise<Blob> {
   let quality = 0.92;
   let blob = await canvasToBlob(canvas, 'image/jpeg', quality);
-
   while (blob.size > maxBytes && quality > 0.10) {
     quality = Math.max(0.10, quality - 0.08);
     blob = await canvasToBlob(canvas, 'image/jpeg', quality);
