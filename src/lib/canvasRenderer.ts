@@ -87,17 +87,17 @@ interface FormatSpec {
 const FORMAT_SPECS: Record<string, FormatSpec> = {
   // TTD
   // 300×250 is the reference — no override flags
-  '160x600':   { headlinePx: 96,  ctaPx: 13,    logoH: 14,  layout: 'vertical',   headLS: -0.03, headLH: 0.95, maxWordsPerLine: 2, padXSpec: 20, layoutStyle: 'poster', textAlign: 'center', ctaMultiLine: true },
-  '300x250':   { headlinePx: 64,  ctaPx: 7,     logoH: 14,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, layoutStyle: 'poster', textAlign: 'left' },
-  '728x90':    { headlinePx: 18,  ctaPx: 10,    logoH: 20,  layout: 'horizontal', headLS: -0.03, headLH: 0.95 },
-  '300x600':   { headlinePx: 156, ctaPx: 11.5,  logoH: 20.7,layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
-  '320x50':    { headlinePx: 10,  ctaPx: 6,     logoH: 11,  layout: 'horizontal', headLS: -0.03, headLH: 0.95, autoShrinkHeadline: true, headlineFloorPx: 8 },
-  '300x50':    { headlinePx: 10,  ctaPx: 6,     logoH: 11,  layout: 'horizontal', headLS: -0.03, headLH: 0.95, autoShrinkHeadline: true, headlineFloorPx: 8 },
-  '768x1024':  { headlinePx: 160, ctaPx: 16.9,  logoH: 31.2,layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'center' },
-  '1024x768':  { headlinePx: 160, ctaPx: 15.6,  logoH: 30.8,layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'left' },
-  '320x480':   { headlinePx: 100, ctaPx: 11,    logoH: 17.6,layout: 'vertical',   headLS: -0.06, headLH: 0.95, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
-  '970x250':   { headlinePx: 25,  ctaPx: 11,    logoH: 26,  layout: 'horizontal', headLS: -0.03, headLH: 0.95 },
-  '480x320':   { headlinePx: 80,  ctaPx: 10,    logoH: 18,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
+  '160x600':   { headlinePx: 124.8,ctaPx: 13,    logoH: 14,  layout: 'vertical',   headLS: -0.03, headLH: 0.95, maxWordsPerLine: 2, padXSpec: 20, layoutStyle: 'poster', textAlign: 'center', ctaMultiLine: true },
+  '300x250':   { headlinePx: 44.8,ctaPx: 7,     logoH: 14,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, layoutStyle: 'poster', textAlign: 'left' },
+  '728x90':    { headlinePx: 23.4,ctaPx: 10,    logoH: 20,  layout: 'horizontal', headLS: -0.03, headLH: 0.95 },
+  '300x600':   { headlinePx: 202.8,ctaPx: 11.5, logoH: 20.7,layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
+  '320x50':    { headlinePx: 13,  ctaPx: 6,     logoH: 11,  layout: 'horizontal', headLS: -0.03, headLH: 0.95, autoShrinkHeadline: true, headlineFloorPx: 8 },
+  '300x50':    { headlinePx: 13,  ctaPx: 6,     logoH: 11,  layout: 'horizontal', headLS: -0.03, headLH: 0.95, autoShrinkHeadline: true, headlineFloorPx: 8 },
+  '768x1024':  { headlinePx: 208, ctaPx: 16.9,  logoH: 31.2,layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'center' },
+  '1024x768':  { headlinePx: 208, ctaPx: 15.6,  logoH: 30.8,layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'left' },
+  '320x480':   { headlinePx: 130, ctaPx: 11,    logoH: 17.6,layout: 'vertical',   headLS: -0.06, headLH: 0.95, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
+  '970x250':   { headlinePx: 32.5,ctaPx: 11,    logoH: 26,  layout: 'horizontal', headLS: -0.03, headLH: 0.95 },
+  '480x320':   { headlinePx: 104, ctaPx: 10,    logoH: 18,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
   // LinkedIn
   '1080x1080': { headlinePx: 176, ctaPx: 20.59, logoH: 51.48,layout: 'vertical',  headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
   '1200x1200': { headlinePx: 192, ctaPx: 17.28, logoH: 44,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
