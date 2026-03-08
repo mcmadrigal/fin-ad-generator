@@ -101,16 +101,16 @@ export function textBlockHeight(lineCount: number, lineHeight: number): number {
 }
 
 /**
- * Portrait word-wrap: distribute words into lines of ≤4 words, spread evenly.
- * Used for portrait (H > W) formats where wrapping must be word-count-based,
- * not pixel-width-based.
+ * Word-count-based wrap: distribute words into lines of ≤ maxPerLine words,
+ * spread as evenly as possible. Used for any format where the designer wants
+ * a hard per-line word cap rather than pixel-width wrapping.
  */
-export function wrapPortraitText(text: string): string[] {
+export function wrapPortraitText(text: string, maxPerLine = 4): string[] {
   const words = text.trim().split(/\s+/).filter(Boolean);
   const n = words.length;
   if (n === 0) return [];
 
-  const numLines = Math.ceil(n / 4); // fewest lines that keep each ≤ 4 words
+  const numLines = Math.ceil(n / maxPerLine); // fewest lines that keep each ≤ maxPerLine
   if (numLines <= 1) return [words.join(' ')];
 
   const base  = Math.floor(n / numLines);

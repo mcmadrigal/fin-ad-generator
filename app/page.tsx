@@ -8,15 +8,19 @@ import { BG_IMAGES } from '@/lib/bgImages';
 import { AdGeneratorForm } from '@/components/AdGeneratorForm';
 import { PreviewGrid } from '@/components/PreviewGrid';
 
+// GeneratedState holds everything that changes only on Generate click.
+// Text and CTA are tracked separately so previews update live as the user types.
 interface GeneratedState {
   specs:         AssetSpec[];
-  text:          string;
-  cta:           string;
   backgroundSrc: string;
   projectName:   string;
 }
 
 export default function HomePage() {
+  // Live copy state — drives preview immediately as the user types
+  const [text, setText] = useState('');
+  const [cta,  setCta]  = useState('');
+
   const [generating, setGenerating] = useState(false);
   const [generated,  setGenerated]  = useState<GeneratedState | null>(null);
 
@@ -29,8 +33,6 @@ export default function HomePage() {
 
     setGenerated({
       specs:         activeSpecs,
-      text:          form.text,
-      cta:           form.cta,
       backgroundSrc: form.backgroundSrc,
       projectName:   form.projectName,
     });
@@ -124,7 +126,14 @@ export default function HomePage() {
           )}
 
           <div style={{ maxWidth: generated ? '100%' : '480px', margin: '0 auto' }}>
-            <AdGeneratorForm onGenerate={handleGenerate} generating={generating} />
+            <AdGeneratorForm
+              text={text}
+              onTextChange={setText}
+              cta={cta}
+              onCtaChange={setCta}
+              onGenerate={handleGenerate}
+              generating={generating}
+            />
           </div>
         </aside>
 
@@ -133,8 +142,8 @@ export default function HomePage() {
           <section id="preview-section" style={{ overflowY: 'auto', padding: '2.5rem' }}>
             <PreviewGrid
               specs={generated.specs}
-              text={generated.text}
-              cta={generated.cta}
+              text={text}
+              cta={cta}
               backgroundSrc={generated.backgroundSrc}
               projectName={generated.projectName}
               onRegenBackground={handleRegenBackground}

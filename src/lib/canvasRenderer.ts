@@ -4,7 +4,7 @@
  *
  * Background  : cover-fit image + rgba(10,14,26,0.50) dark overlay
  * Typography  : hardcoded per-format type specs — no dynamic scaling
- * Layout      : vertical thirds | horizontal (banner) | no-cta (768×1024)
+ * Layout      : vertical thirds | horizontal (banner)
  * CTA         : all-caps tracked text + thin underline rule — no button
  */
 
@@ -61,40 +61,49 @@ function ctaFont(size: number):     string  { return `400 ${size}px ${CTA_FONT_S
 // ---------------------------------------------------------------------------
 function setLetterSpacing(ctx: CanvasRenderingContext2D, px: number): void {
   try { (ctx as unknown as { letterSpacing: string }).letterSpacing = `${px}px`; }
-  catch { /* noop in environments that don't support it */ }
+  catch { /* noop */ }
 }
 
 // ---------------------------------------------------------------------------
-// Per-format type specs — all values hardcoded
-// headlinePx values are the designer originals × 1.15, rounded to integers
+// Per-format type specs — all values hardcoded at spec size, scaled at render
 // ---------------------------------------------------------------------------
 interface FormatSpec {
-  headlinePx: number;
-  ctaPx:      number | null; // null → no CTA rendered (768×1024)
-  logoH:      number;        // rendered logo height px; width = logoH × LOGO_ASPECT
-  layout:     'vertical' | 'horizontal' | 'no-cta';
-  headLS:     number;        // headline letter-spacing as fraction of headlinePx
-  headLH:     number;        // headline line-height as fraction of headlinePx
+  headlinePx:          number;
+  ctaPx:               number | null;
+  logoH:               number;
+  layout:              'vertical' | 'horizontal';
+  headLS:              number;   // headline letter-spacing as fraction of headlinePx
+  headLH:              number;   // headline line-height as fraction of headlinePx
+  // Optional overrides
+  maxWordsPerLine?:    number;   // word-count wrap; omit = pixel-based (or portrait default 4)
+  padXSpec?:           number;   // override horizontal padding at spec size
+  autoShrinkHeadline?: boolean;  // shrink font to fit (horizontal only), no truncation
+  headlineFloorPx?:    number;   // minimum headlinePx for auto-shrink, at spec size
 }
 
 const FORMAT_SPECS: Record<string, FormatSpec> = {
-  //            headlinePx  ctaPx   logoH  layout        headLS   headLH
-  '160x600':   { headlinePx: 25,  ctaPx: 13.65, logoH: 18,  layout: 'vertical',   headLS: -0.03, headLH: 0.95 },
+  // TTD
+  // 300×250 is the reference — no override flags
+  '160x600':   { headlinePx: 25,  ctaPx: 13.65, logoH: 18,  layout: 'vertical',   headLS: -0.03, headLH: 0.95, maxWordsPerLine: 3, padXSpec: 20 },
   '300x250':   { headlinePx: 21,  ctaPx: 9,     logoH: 22,  layout: 'vertical',   headLS: -0.06, headLH: 1.00 },
   '728x90':    { headlinePx: 18,  ctaPx: 10,    logoH: 20,  layout: 'horizontal', headLS: -0.03, headLH: 0.95 },
   '300x600':   { headlinePx: 25,  ctaPx: 10,    logoH: 26,  layout: 'vertical',   headLS: -0.06, headLH: 1.00 },
-  '320x50':    { headlinePx: 15,  ctaPx: 9,     logoH: 14,  layout: 'horizontal', headLS: -0.03, headLH: 0.95 },
-  '300x50':    { headlinePx: 15,  ctaPx: 9,     logoH: 14,  layout: 'horizontal', headLS: -0.03, headLH: 0.95 },
-  '768x1024':  { headlinePx: 32,  ctaPx: null,  logoH: 20,  layout: 'no-cta',     headLS: -0.06, headLH: 1.00 },
-  '1024x768':  { headlinePx: 37,  ctaPx: 13,    logoH: 36,  layout: 'vertical',   headLS: -0.06, headLH: 1.00 },
+  '320x50':    { headlinePx: 15,  ctaPx: 9,     logoH: 14,  layout: 'horizontal', headLS: -0.03, headLH: 0.95, autoShrinkHeadline: true, headlineFloorPx: 9 },
+  '300x50':    { headlinePx: 15,  ctaPx: 9,     logoH: 14,  layout: 'horizontal', headLS: -0.03, headLH: 0.95, autoShrinkHeadline: true, headlineFloorPx: 9 },
+  '768x1024':  { headlinePx: 38,  ctaPx: 13,    logoH: 20,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4 },
+  '1024x768':  { headlinePx: 44,  ctaPx: 13,    logoH: 36,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4 },
   '320x480':   { headlinePx: 23,  ctaPx: 10,    logoH: 24,  layout: 'vertical',   headLS: -0.06, headLH: 0.95 },
   '970x250':   { headlinePx: 25,  ctaPx: 11,    logoH: 26,  layout: 'horizontal', headLS: -0.03, headLH: 0.95 },
-  '480x320':   { headlinePx: 23,  ctaPx: 10,    logoH: 24,  layout: 'vertical',   headLS: -0.06, headLH: 1.00 },
-  '1080x1080': { headlinePx: 48,  ctaPx: 15,    logoH: 48,  layout: 'vertical',   headLS: -0.06, headLH: 1.00 },
-  '1200x1200': { headlinePx: 53,  ctaPx: 16,    logoH: 52,  layout: 'vertical',   headLS: -0.06, headLH: 1.00 },
-  '1200x628':  { headlinePx: 37,  ctaPx: 13,    logoH: 36,  layout: 'vertical',   headLS: -0.06, headLH: 1.00 },
-  '1080x1920': { headlinePx: 55,  ctaPx: 16,    logoH: 54,  layout: 'vertical',   headLS: -0.06, headLH: 1.00 },
-  '1920x1080': { headlinePx: 44,  ctaPx: 14,    logoH: 44,  layout: 'vertical',   headLS: -0.03, headLH: 0.95 },
+  '480x320':   { headlinePx: 23,  ctaPx: 10,    logoH: 24,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4 },
+  // LinkedIn (+30% headline, max 4 words/line)
+  '1080x1080': { headlinePx: 62,  ctaPx: 15,    logoH: 48,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4 },
+  '1200x1200': { headlinePx: 69,  ctaPx: 16,    logoH: 52,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4 },
+  // 6Sense (+30% headline, max 4 words/line)
+  '1200x628':  { headlinePx: 48,  ctaPx: 13,    logoH: 36,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4 },
+  // Meta (+30% headline, max 4 words/line)
+  // 1080×1080 shared with LinkedIn above
+  '1080x1920': { headlinePx: 72,  ctaPx: 16,    logoH: 54,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4 },
+  '1920x1080': { headlinePx: 57,  ctaPx: 14,    logoH: 44,  layout: 'vertical',   headLS: -0.03, headLH: 0.95, maxWordsPerLine: 4 },
 };
 
 function getSpec(W: number, H: number): FormatSpec {
@@ -131,10 +140,9 @@ function drawCoverBackground(
 /**
  * Renders a Fin ad to the given canvas at the requested pixel dimensions.
  *
- * specWidth / specHeight are the original ad spec dimensions and are used for
- * the FORMAT_SPECS lookup + portrait detection. Pass them when rendering a
- * preview at scaled-down display dimensions. Omit (or pass the same values as
- * width/height) when rendering at the true spec size (e.g. for export).
+ * specWidth / specHeight are the original ad spec dimensions used for the
+ * FORMAT_SPECS lookup and portrait detection. Pass them when rendering at a
+ * scaled-down preview size. Omit when rendering at the true spec size.
  */
 export async function renderAdToCanvas(
   canvas: HTMLCanvasElement,
@@ -159,32 +167,33 @@ export async function renderAdToCanvas(
   const bgImg = await loadBgImage(backgroundSrc);
   drawCoverBackground(ctx, W, H, bgImg);
 
-  // 2. Wait for fonts to be ready in the browser
+  // 2. Wait for fonts
   if (typeof document !== 'undefined') await document.fonts.ready;
 
   // 3. Load logo
   const logoImg = await loadLogoImage();
 
-  // 4. Resolve spec using original dimensions, then scale values to display size
+  // 4. Resolve spec using original dimensions, scale all size values to display
   const sW = specWidth  ?? W;
   const sH = specHeight ?? H;
   const rawSpec   = getSpec(sW, sH);
   const dispScale = Math.min(W / sW, H / sH);
+
   const spec: FormatSpec = {
     ...rawSpec,
-    headlinePx: rawSpec.headlinePx * dispScale,
-    ctaPx:      rawSpec.ctaPx !== null ? rawSpec.ctaPx * dispScale : null,
-    logoH:      rawSpec.logoH * dispScale,
+    headlinePx:      rawSpec.headlinePx   * dispScale,
+    ctaPx:           rawSpec.ctaPx !== null ? rawSpec.ctaPx * dispScale : null,
+    logoH:           rawSpec.logoH        * dispScale,
+    padXSpec:        rawSpec.padXSpec        !== undefined ? rawSpec.padXSpec        * dispScale : undefined,
+    headlineFloorPx: rawSpec.headlineFloorPx !== undefined ? rawSpec.headlineFloorPx * dispScale : undefined,
   };
 
-  // Portrait = spec taller than wide (not display dimensions)
+  // Portrait = spec taller than wide (use spec dims, not display dims)
   const isPortrait = sH > sW;
 
   // 5. Route to layout
   if (spec.layout === 'horizontal') {
     renderHorizontalLayout(ctx, W, H, text, cta, logoImg, spec);
-  } else if (spec.layout === 'no-cta') {
-    renderNoCTALayout(ctx, W, H, text, logoImg, spec, isPortrait);
   } else {
     renderVerticalLayout(ctx, W, H, text, cta, logoImg, spec, isPortrait);
   }
@@ -201,8 +210,9 @@ function renderVerticalLayout(
   spec: FormatSpec,
   isPortrait: boolean,
 ): void {
+  // padXSpec overrides the default 8% when a minimum pixel margin is required
+  const padX     = spec.padXSpec !== undefined ? spec.padXSpec : W * 0.08;
   const padY     = H * 0.08;
-  const padX     = W * 0.08;
   const contentH = H - padY * 2;
   const thirdH   = contentH / 3;
 
@@ -221,17 +231,51 @@ function renderVerticalLayout(
   }
 
   // ── Headline (middle third, centered) ─────────────────────────────────────
-  const { headlinePx, headLS, headLH } = spec;
-  const lineH   = headlinePx * headLH;
-  const midTop  = padY + thirdH;
-  const midH    = thirdH;
+  let headlinePx = spec.headlinePx;   // mutable — may be reduced for overflow
+  const { headLS, headLH } = spec;
+  const maxW   = W - padX * 2;
+  const midTop = padY + thirdH;
+  const midH   = thirdH;
 
-  setLetterSpacing(ctx, headLS * headlinePx);
-  ctx.font = headlineFont(headlinePx);
+  // Determine wrapping strategy
+  let lines: string[];
+  if (spec.maxWordsPerLine !== undefined) {
+    // Word-count-based wrap (enforced regardless of landscape/portrait)
+    setLetterSpacing(ctx, headLS * headlinePx);
+    ctx.font = headlineFont(headlinePx);
+    lines = wrapPortraitText(text, spec.maxWordsPerLine);
 
-  const lines  = isPortrait
-    ? wrapPortraitText(text)
-    : wrapText(ctx, text, W - padX * 2);
+    // Pixel-overflow safety: reduce font until every line fits within maxW
+    let maxLineW = Math.max(...lines.map(l => ctx.measureText(l).width));
+    const floorPx = 8;
+    while (maxLineW > maxW && headlinePx > floorPx) {
+      headlinePx = Math.max(floorPx, headlinePx - 0.5);
+      setLetterSpacing(ctx, headLS * headlinePx);
+      ctx.font = headlineFont(headlinePx);
+      maxLineW = Math.max(...lines.map(l => ctx.measureText(l).width));
+    }
+  } else if (isPortrait) {
+    // Portrait default: max 4 words/line, pixel-overflow safety included
+    setLetterSpacing(ctx, headLS * headlinePx);
+    ctx.font = headlineFont(headlinePx);
+    lines = wrapPortraitText(text, 4);
+
+    let maxLineW = Math.max(...lines.map(l => ctx.measureText(l).width));
+    const floorPx = 8;
+    while (maxLineW > maxW && headlinePx > floorPx) {
+      headlinePx = Math.max(floorPx, headlinePx - 0.5);
+      setLetterSpacing(ctx, headLS * headlinePx);
+      ctx.font = headlineFont(headlinePx);
+      maxLineW = Math.max(...lines.map(l => ctx.measureText(l).width));
+    }
+  } else {
+    // Landscape/square: pixel-width wrap (reference behaviour, e.g. 300×250)
+    setLetterSpacing(ctx, headLS * headlinePx);
+    ctx.font = headlineFont(headlinePx);
+    lines = wrapText(ctx, text, maxW);
+  }
+
+  const lineH  = headlinePx * headLH;
   const blockH = textBlockHeight(lines.length, lineH);
 
   ctx.fillStyle    = '#FFFFFF';
@@ -263,7 +307,7 @@ function renderHorizontalLayout(
   const logoW = logoH * LOGO_ASPECT;
   ctx.drawImage(logoImg, padX, midY - logoH / 2, logoW, logoH);
 
-  // ── CTA (right, vertically centered, char-by-char for precise alignment) ──
+  // ── CTA (right, char-by-char for precise alignment) ───────────────────────
   const ctaPx      = spec.ctaPx ?? spec.headlinePx * 0.4;
   const ctaDisplay = cta.toUpperCase();
   const letterSp   = ctaPx * 0.10;
@@ -274,8 +318,7 @@ function renderHorizontalLayout(
   const ctaTextW   = charWidths.reduce((s, w) => s + w, 0) + letterSp * Math.max(0, chars.length - 1);
   const ruleH      = Math.max(0.5, H * 0.012);
   const ruleGap    = Math.max(1,   ctaPx * 0.15);
-  const ctaTotalH  = ctaPx + ruleGap + ruleH;
-  const ctaTextY   = midY - ctaTotalH / 2;
+  const ctaTextY   = midY - (ctaPx + ruleGap + ruleH) / 2;
 
   ctx.fillStyle    = '#FFFFFF';
   ctx.textBaseline = 'top';
@@ -285,7 +328,7 @@ function renderHorizontalLayout(
     cx += charWidths[i] + letterSp;
   }
 
-  // Underline rule beneath CTA
+  // Underline rule
   const ruleW = ctaTextW + ctaPx * 0.4;
   const ruleX = W - padX - ruleW;
   const ruleY = ctaTextY + ctaPx + ruleGap;
@@ -296,75 +339,43 @@ function renderHorizontalLayout(
   ctx.lineWidth   = ruleH;
   ctx.stroke();
 
-  // ── Headline (center zone, single line, truncate with ellipsis) ───────────
+  // ── Headline (center zone) ────────────────────────────────────────────────
   const textStart  = padX + logoW + padX;
   const textEnd    = ruleX - padX;
   const textAvailW = textEnd - textStart;
 
   if (textAvailW > 20) {
-    const { headlinePx, headLS } = spec;
+    let headlinePx  = spec.headlinePx;  // mutable for auto-shrink
+    const { headLS } = spec;
+
     setLetterSpacing(ctx, headLS * headlinePx);
     ctx.font         = headlineFont(headlinePx);
     ctx.fillStyle    = '#FFFFFF';
     ctx.textAlign    = 'center';
     ctx.textBaseline = 'middle';
 
-    let displayText = text;
-    while (ctx.measureText(displayText).width > textAvailW && displayText.length > 1) {
-      const lastSpace = displayText.lastIndexOf(' ');
-      displayText = lastSpace > 0
-        ? displayText.substring(0, lastSpace) + '…'
-        : displayText.slice(0, -2) + '…';
+    if (spec.autoShrinkHeadline) {
+      // Reduce font size until full text fits — no truncation, floor at headlineFloorPx
+      const floorPx = spec.headlineFloorPx ?? 8;
+      while (ctx.measureText(text).width > textAvailW && headlinePx > floorPx) {
+        headlinePx = Math.max(floorPx, headlinePx - 0.5);
+        setLetterSpacing(ctx, headLS * headlinePx);
+        ctx.font = headlineFont(headlinePx);
+      }
+      ctx.fillText(text, textStart + textAvailW / 2, midY);
+    } else {
+      // Default: truncate with ellipsis
+      let displayText = text;
+      while (ctx.measureText(displayText).width > textAvailW && displayText.length > 1) {
+        const lastSpace = displayText.lastIndexOf(' ');
+        displayText = lastSpace > 0
+          ? displayText.substring(0, lastSpace) + '…'
+          : displayText.slice(0, -2) + '…';
+      }
+      ctx.fillText(displayText, textStart + textAvailW / 2, midY);
     }
-    ctx.fillText(displayText, textStart + textAvailW / 2, midY);
     setLetterSpacing(ctx, 0);
   }
-}
-
-// ---------------------------------------------------------------------------
-// No-CTA layout (768×1024) — logo top third | headline centered below
-// ---------------------------------------------------------------------------
-function renderNoCTALayout(
-  ctx: CanvasRenderingContext2D,
-  W: number, H: number,
-  text: string,
-  logoImg: HTMLImageElement,
-  spec: FormatSpec,
-  isPortrait: boolean,
-): void {
-  const padY   = H * 0.08;
-  const padX   = W * 0.08;
-  const thirdH = (H - padY * 2) / 3;
-
-  // ── Logo (top third, centered) ────────────────────────────────────────────
-  const rawLogoW = spec.logoH * LOGO_ASPECT;
-  const logoW    = Math.min(rawLogoW, W - padX * 2);
-  const logoH    = logoW / LOGO_ASPECT;
-  ctx.drawImage(logoImg, (W - logoW) / 2, padY + (thirdH - logoH) / 2, logoW, logoH);
-
-  // ── Headline (centered in lower two-thirds) ───────────────────────────────
-  const { headlinePx, headLS, headLH } = spec;
-  const lineH   = headlinePx * headLH;
-  const zoneTop = padY + thirdH;
-  const zoneH   = thirdH * 2;
-
-  setLetterSpacing(ctx, headLS * headlinePx);
-  ctx.font = headlineFont(headlinePx);
-
-  const lines  = isPortrait
-    ? wrapPortraitText(text)
-    : wrapText(ctx, text, W - padX * 2);
-  const blockH = textBlockHeight(lines.length, lineH);
-
-  ctx.fillStyle    = '#FFFFFF';
-  ctx.textAlign    = 'center';
-  ctx.textBaseline = 'top';
-
-  const textStartY = zoneTop + (zoneH - blockH) / 2;
-  for (let i = 0; i < lines.length; i++) {
-    ctx.fillText(lines[i], W / 2, textStartY + i * lineH);
-  }
-  setLetterSpacing(ctx, 0);
 }
 
 // ---------------------------------------------------------------------------
@@ -395,7 +406,6 @@ function drawCTACentered(
     x += charWidths[i] + letterSp;
   }
 
-  // Thin underline rule
   const ruleW = totalW + ctaPx * 0.3;
   const ruleX = W / 2 - ruleW / 2;
   const ruleY = ctaY + ctaPx + ruleGap;
@@ -425,10 +435,6 @@ export function canvasToBlob(
   });
 }
 
-/**
- * Export canvas to a Blob of the given format, compressing JPEG quality
- * iteratively until the file fits within maxBytes.
- */
 export async function exportWithSizeLimit(
   canvas: HTMLCanvasElement,
   format: 'jpg' | 'png',

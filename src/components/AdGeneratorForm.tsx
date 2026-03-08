@@ -19,14 +19,17 @@ function initialSelectedKeys(setKey: AssetSetKey): Set<string> {
 }
 
 interface Props {
-  onGenerate: (state: FormState) => void;
-  generating: boolean;
+  // Controlled copy fields — lifted to page so previews update live
+  text:         string;
+  onTextChange: (v: string) => void;
+  cta:          string;
+  onCtaChange:  (v: string) => void;
+  onGenerate:   (state: FormState) => void;
+  generating:   boolean;
 }
 
-export function AdGeneratorForm({ onGenerate, generating }: Props) {
+export function AdGeneratorForm({ text, onTextChange, cta, onCtaChange, onGenerate, generating }: Props) {
   const [projectName,   setProjectName]   = useState('');
-  const [text,          setText]          = useState('');
-  const [cta,           setCta]           = useState('');
   const [activeSet,     setActiveSet]     = useState<AssetSetKey>('full');
   const [selectedKeys,  setSelectedKeys]  = useState<Set<string>>(initialSelectedKeys('full'));
   const [backgroundSrc, setBackgroundSrc] = useState(BG_IMAGES[0].src);
@@ -99,7 +102,7 @@ export function AdGeneratorForm({ onGenerate, generating }: Props) {
           rows={3}
           placeholder="Resolve 51% of support queries with Fin."
           value={text}
-          onChange={e => setText(e.target.value)}
+          onChange={e => onTextChange(e.target.value)}
           style={{ resize: 'vertical', minHeight: '72px' }}
         />
         {textError && (
@@ -120,7 +123,7 @@ export function AdGeneratorForm({ onGenerate, generating }: Props) {
           type="text"
           placeholder="See Fin in action"
           value={cta}
-          onChange={e => setCta(e.target.value)}
+          onChange={e => onCtaChange(e.target.value)}
           maxLength={60}
         />
         {ctaError && (
