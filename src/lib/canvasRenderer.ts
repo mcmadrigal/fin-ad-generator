@@ -82,13 +82,14 @@ interface FormatSpec {
   layoutStyle?:        'poster'; // editorial: logo top, large headline center, CTA footnote bottom
   textAlign?:          'left' | 'center'; // poster alignment; default: left for W≥H, center for H>W
   ctaMultiLine?:       boolean;  // allow CTA to wrap to 2 lines (for narrow portrait formats)
+  noAutoShrink?:       boolean;  // skip overflow-reduction loop — render at headlinePx exactly
+  logoZonePct?:        number;   // logo occupies top N% of canvas height (zone-based layout)
+  ctaZonePct?:         number;   // CTA occupies bottom N% of canvas height (zone-based layout)
 }
 
 const FORMAT_SPECS: Record<string, FormatSpec> = {
   // TTD
-  // 300×250 is the reference — no override flags
   '160x600':   { headlinePx: 149.76,ctaPx: 13,   logoH: 16.8,layout: 'vertical',   headLS: -0.03, headLH: 0.95, maxWordsPerLine: 2, padXSpec: 20, layoutStyle: 'poster', textAlign: 'center', ctaMultiLine: true },
-  '300x250':   { headlinePx: 35.84,ctaPx: 7,    logoH: 14,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, layoutStyle: 'poster', textAlign: 'left' },
   '728x90':    { headlinePx: 23.4,ctaPx: 10,    logoH: 20,  layout: 'horizontal', headLS: -0.03, headLH: 0.95 },
   '300x600':   { headlinePx: 202.8,ctaPx: 11.5, logoH: 20.7,layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
   '320x50':    { headlinePx: 13,  ctaPx: 6,     logoH: 11,  layout: 'horizontal', headLS: -0.03, headLH: 0.95, autoShrinkHeadline: true, headlineFloorPx: 8 },
@@ -273,7 +274,7 @@ function renderVerticalLayout(
       maxLineW = Math.max(...lines.map(l => ctx.measureText(l).width));
     }
   } else {
-    // Landscape/square: pixel-width wrap (reference behaviour, e.g. 300×250)
+    // Landscape/square: pixel-width wrap
     setLetterSpacing(ctx, headLS * headlinePx);
     ctx.font = headlineFont(headlinePx);
     lines = wrapText(ctx, text, maxW);
@@ -304,18 +305,22 @@ function renderPosterLayout(
   spec: FormatSpec,
   isPortrait: boolean,
 ): void {
-  const padX     = spec.padXSpec !== undefined ? spec.padXSpec : W * 0.08;
-  const padY     = H * 0.08;
-  const maxW     = W - padX * 2;
-  const align    = spec.textAlign ?? (isPortrait ? 'center' : 'left');
-  const innerGap = padY * 0.35;
+  const padX       = spec.padXSpec !== undefined ? spec.padXSpec : W * 0.08;
+  const padY       = H * 0.08;
+  const maxW       = W - padX * 2;
+  const align      = spec.textAlign ?? (isPortrait ? 'center' : 'left');
+  const innerGap   = padY * 0.35;
+  const minEdgePad = 20;
 
   // ── Logo (pinned top, small and discrete) ─────────────────────────────────
   const rawLogoW = spec.logoH * LOGO_ASPECT;
   const logoW    = Math.min(rawLogoW, maxW);
   const logoH    = logoW / LOGO_ASPECT;
   const logoX    = align === 'left' ? padX : (W - logoW) / 2;
-  ctx.drawImage(logoImg, logoX, padY, logoW, logoH);
+  const logoDrawY = spec.logoZonePct !== undefined
+    ? Math.max(minEdgePad, (H * spec.logoZonePct - logoH) / 2)
+    : padY;
+  ctx.drawImage(logoImg, logoX, logoDrawY, logoW, logoH);
 
   // ── CTA pre-measurement (supports multi-line wrapping) ────────────────────
   const ctaPx    = spec.ctaPx ?? spec.headlinePx * 0.15;
@@ -344,7 +349,9 @@ function renderPosterLayout(
   const ctaBlockH   = ctaNumLines > 1
     ? ctaNumLines * ctaLineH + ruleGap + ruleH
     : (ctaLines.length > 0 ? ctaPx + ruleGap + ruleH : 0);
-  const ctaY = H - padY - ctaBlockH;
+  const ctaY = spec.ctaZonePct !== undefined
+    ? H - minEdgePad - ctaBlockH
+    : H - padY - ctaBlockH;
 
   // ── Draw CTA ──────────────────────────────────────────────────────────────
   if (spec.ctaPx !== null && ctaLines.length > 0) {
@@ -360,8 +367,12 @@ function renderPosterLayout(
   }
 
   // ── Headline (fills the large middle zone) ────────────────────────────────
-  const headlineZoneTop = padY + logoH + innerGap;
-  const headlineZoneBot = ctaY - innerGap;
+  const headlineZoneTop = spec.logoZonePct !== undefined
+    ? H * spec.logoZonePct
+    : padY + logoH + innerGap;
+  const headlineZoneBot = spec.ctaZonePct !== undefined
+    ? H * (1 - spec.ctaZonePct)
+    : ctaY - innerGap;
   const headlineZoneH   = headlineZoneBot - headlineZoneTop;
 
   if (headlineZoneH <= 0 || text.trim().length === 0) return;
@@ -382,6 +393,7 @@ function renderPosterLayout(
       ? wrapText(ctx, text, maxW)
       : wrapPortraitText(text, wordsPerLine);
     if (lines.length === 0) break;
+    if (spec.noAutoShrink) break;
     const lineH    = headlinePx * headLH;
     const blockH   = textBlockHeight(lines.length, lineH);
     const maxLineW = Math.max(...lines.map(l => ctx.measureText(l).width));

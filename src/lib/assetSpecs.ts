@@ -21,7 +21,6 @@ function spec(
 export const ASSET_SPECS: Record<Channel, AssetSpec[]> = {
   ttd: [
     spec('ttd', 160,  600, 150),
-    spec('ttd', 300,  250, 150),
     spec('ttd', 728,  90,  150),
     spec('ttd', 300,  600, 150),
     spec('ttd', 320,  50,  150),
