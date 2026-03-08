@@ -87,8 +87,8 @@ interface FormatSpec {
 const FORMAT_SPECS: Record<string, FormatSpec> = {
   // TTD
   // 300×250 is the reference — no override flags
-  '160x600':   { headlinePx: 124.8,ctaPx: 13,    logoH: 14,  layout: 'vertical',   headLS: -0.03, headLH: 0.95, maxWordsPerLine: 2, padXSpec: 20, layoutStyle: 'poster', textAlign: 'center', ctaMultiLine: true },
-  '300x250':   { headlinePx: 44.8,ctaPx: 7,     logoH: 14,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, layoutStyle: 'poster', textAlign: 'left' },
+  '160x600':   { headlinePx: 149.76,ctaPx: 13,   logoH: 16.8,layout: 'vertical',   headLS: -0.03, headLH: 0.95, maxWordsPerLine: 2, padXSpec: 20, layoutStyle: 'poster', textAlign: 'center', ctaMultiLine: true },
+  '300x250':   { headlinePx: 35.84,ctaPx: 7,    logoH: 14,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, layoutStyle: 'poster', textAlign: 'left' },
   '728x90':    { headlinePx: 23.4,ctaPx: 10,    logoH: 20,  layout: 'horizontal', headLS: -0.03, headLH: 0.95 },
   '300x600':   { headlinePx: 202.8,ctaPx: 11.5, logoH: 20.7,layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
   '320x50':    { headlinePx: 13,  ctaPx: 6,     logoH: 11,  layout: 'horizontal', headLS: -0.03, headLH: 0.95, autoShrinkHeadline: true, headlineFloorPx: 8 },
