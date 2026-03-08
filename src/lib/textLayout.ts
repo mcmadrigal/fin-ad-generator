@@ -99,3 +99,29 @@ function fixWidowsOrphans(
 export function textBlockHeight(lineCount: number, lineHeight: number): number {
   return lineCount * lineHeight;
 }
+
+/**
+ * Portrait word-wrap: distribute words into lines of ≤4 words, spread evenly.
+ * Used for portrait (H > W) formats where wrapping must be word-count-based,
+ * not pixel-width-based.
+ */
+export function wrapPortraitText(text: string): string[] {
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  const n = words.length;
+  if (n === 0) return [];
+
+  const numLines = Math.ceil(n / 4); // fewest lines that keep each ≤ 4 words
+  if (numLines <= 1) return [words.join(' ')];
+
+  const base  = Math.floor(n / numLines);
+  const extra = n % numLines; // first `extra` lines get one more word
+
+  const lines: string[] = [];
+  let i = 0;
+  for (let l = 0; l < numLines; l++) {
+    const count = l < extra ? base + 1 : base;
+    lines.push(words.slice(i, i + count).join(' '));
+    i += count;
+  }
+  return lines;
+}
