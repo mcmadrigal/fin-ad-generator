@@ -87,25 +87,25 @@ interface FormatSpec {
 const FORMAT_SPECS: Record<string, FormatSpec> = {
   // TTD
   // 300×250 is the reference — no override flags
-  '160x600':   { headlinePx: 80,  ctaPx: 13,    logoH: 14,  layout: 'vertical',   headLS: -0.03, headLH: 0.95, maxWordsPerLine: 2, padXSpec: 20, layoutStyle: 'poster', textAlign: 'center', ctaMultiLine: true },
-  '300x250':   { headlinePx: 80,  ctaPx: 7,     logoH: 14,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, layoutStyle: 'poster', textAlign: 'left' },
+  '160x600':   { headlinePx: 96,  ctaPx: 13,    logoH: 14,  layout: 'vertical',   headLS: -0.03, headLH: 0.95, maxWordsPerLine: 2, padXSpec: 20, layoutStyle: 'poster', textAlign: 'center', ctaMultiLine: true },
+  '300x250':   { headlinePx: 64,  ctaPx: 7,     logoH: 14,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, layoutStyle: 'poster', textAlign: 'left' },
   '728x90':    { headlinePx: 18,  ctaPx: 10,    logoH: 20,  layout: 'horizontal', headLS: -0.03, headLH: 0.95 },
-  '300x600':   { headlinePx: 120, ctaPx: 11.5,  logoH: 20.7,layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
+  '300x600':   { headlinePx: 156, ctaPx: 11.5,  logoH: 20.7,layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
   '320x50':    { headlinePx: 10,  ctaPx: 6,     logoH: 11,  layout: 'horizontal', headLS: -0.03, headLH: 0.95, autoShrinkHeadline: true, headlineFloorPx: 8 },
   '300x50':    { headlinePx: 10,  ctaPx: 6,     logoH: 11,  layout: 'horizontal', headLS: -0.03, headLH: 0.95, autoShrinkHeadline: true, headlineFloorPx: 8 },
-  '768x1024':  { headlinePx: 160, ctaPx: 16.9,  logoH: 26,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'center' },
+  '768x1024':  { headlinePx: 160, ctaPx: 16.9,  logoH: 31.2,layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'center' },
   '1024x768':  { headlinePx: 160, ctaPx: 15.6,  logoH: 30.8,layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'left' },
   '320x480':   { headlinePx: 100, ctaPx: 11,    logoH: 17.6,layout: 'vertical',   headLS: -0.06, headLH: 0.95, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
   '970x250':   { headlinePx: 25,  ctaPx: 11,    logoH: 26,  layout: 'horizontal', headLS: -0.03, headLH: 0.95 },
   '480x320':   { headlinePx: 80,  ctaPx: 10,    logoH: 18,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
   // LinkedIn
-  '1080x1080': { headlinePx: 176, ctaPx: 13.2,  logoH: 39.6,layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
-  '1200x1200': { headlinePx: 192, ctaPx: 14.4,  logoH: 44,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
+  '1080x1080': { headlinePx: 176, ctaPx: 15.84, logoH: 51.48,layout: 'vertical',  headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
+  '1200x1200': { headlinePx: 192, ctaPx: 17.28, logoH: 44,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
   // 6Sense
-  '1200x628':  { headlinePx: 144, ctaPx: 11,    logoH: 28,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'left' },
+  '1200x628':  { headlinePx: 144, ctaPx: 13.2,  logoH: 28,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'left' },
   // Meta (1080×1080 shared with LinkedIn above)
-  '1080x1920': { headlinePx: 300, ctaPx: 16.9,  logoH: 46.8,layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
-  '1920x1080': { headlinePx: 200, ctaPx: 16.9,  logoH: 40,  layout: 'vertical',   headLS: -0.03, headLH: 0.95, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'left' },
+  '1080x1920': { headlinePx: 300, ctaPx: 20.28, logoH: 60.84,layout: 'vertical',  headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
+  '1920x1080': { headlinePx: 200, ctaPx: 20.28, logoH: 52,  layout: 'vertical',   headLS: -0.03, headLH: 0.95, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'left' },
 };
 
 function getSpec(W: number, H: number): FormatSpec {
