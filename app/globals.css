@@ -52,6 +52,14 @@
 }
 
 @font-face {
+  font-family: 'Medium LL TT';
+  src: url('/fonts/MediumLL-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
   font-family: 'Aeonik Fono';
   src: url('/fonts/aeonikfono-regular.otf') format('opentype');
   font-weight: 400;
