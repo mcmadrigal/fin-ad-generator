@@ -59,7 +59,7 @@ export const CHANNEL_FILE_LABELS: Record<Channel, string> = {
   meta:     'Meta',
 };
 
-export const ALL_CHANNELS: Channel[] = ['ttd', 'linkedin', 'sixsense', 'meta'];
+export const ALL_CHANNELS: Channel[] = ['meta', 'linkedin', 'sixsense', 'ttd'];
 
 export const SET_CHANNELS: Record<AssetSetKey, Channel[]> = {
   full:     ALL_CHANNELS,
