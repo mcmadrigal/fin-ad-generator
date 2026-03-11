@@ -12,7 +12,6 @@ export interface PackageJob {
   text:            string;
   subheadline:     string;
   cta:             string;
-  showHeadline:    boolean;
   showSubheadline: boolean;
   showCta:         boolean;
   backgroundSrc:   string;
@@ -53,7 +52,7 @@ export async function buildAndDownloadZip(
   let done    = 0;
 
   for (const job of jobs) {
-    const { spec, text, subheadline, cta, showHeadline, showSubheadline, showCta, backgroundSrc } = job;
+    const { spec, text, subheadline, cta, showSubheadline, showCta, backgroundSrc } = job;
     const channel  = CHANNEL_FILE_LABELS[spec.channel];
     const size     = `${spec.width}x${spec.height}`;
     const baseName = `${project}_Display_${channel}-${size}_${today}`;
@@ -61,7 +60,7 @@ export async function buildAndDownloadZip(
 
     // Render at full resolution
     const canvas = document.createElement('canvas');
-    await renderAdToCanvas(canvas, spec.width, spec.height, text, subheadline, cta, showHeadline, showSubheadline, showCta, backgroundSrc);
+    await renderAdToCanvas(canvas, spec.width, spec.height, text, subheadline, cta, showSubheadline, showCta, backgroundSrc);
 
     // JPEG
     const jpgBlob = await exportWithSizeLimit(canvas, 'jpg', maxBytes);

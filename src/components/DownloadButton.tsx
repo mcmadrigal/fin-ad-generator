@@ -9,7 +9,6 @@ interface Props {
   text:            string;
   subheadline:     string;
   cta:             string;
-  showHeadline:    boolean;
   showSubheadline: boolean;
   showCta:         boolean;
   backgroundSrc:   string;
@@ -18,7 +17,7 @@ interface Props {
 }
 
 export function DownloadButton({
-  specs, text, subheadline, cta, showHeadline, showSubheadline, showCta,
+  specs, text, subheadline, cta, showSubheadline, showCta,
   backgroundSrc, projectName, disabled,
 }: Props) {
   const [progress,    setProgress]    = useState<{ done: number; total: number } | null>(null);
@@ -31,7 +30,7 @@ export function DownloadButton({
 
     try {
       await buildAndDownloadZip(
-        specs.map(spec => ({ spec, text, subheadline, cta, showHeadline, showSubheadline, showCta, backgroundSrc, projectName })),
+        specs.map(spec => ({ spec, text, subheadline, cta, showSubheadline, showCta, backgroundSrc, projectName })),
         (done, total) => setProgress({ done, total }),
       );
     } catch (err) {

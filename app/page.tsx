@@ -21,7 +21,6 @@ export default function HomePage() {
   const [subheadline,      setSubheadline]      = useState('The #1 Agent in customer service');
   const [cta,              setCta]              = useState('See Fin in action');
   const [backgroundSrc,    setBackgroundSrc]    = useState(BG_IMAGES[0].src);
-  const [showHeadline,     setShowHeadline]     = useState(true);
   const [showSubheadline,  setShowSubheadline]  = useState(true);
   const [showCta,          setShowCta]          = useState(true);
 
@@ -119,8 +118,6 @@ export default function HomePage() {
             onCtaChange={setCta}
             backgroundSrc={backgroundSrc}
             onBackgroundSrcChange={setBackgroundSrc}
-            showHeadline={showHeadline}
-            onShowHeadlineChange={setShowHeadline}
             showSubheadline={showSubheadline}
             onShowSubheadlineChange={setShowSubheadline}
             showCta={showCta}
@@ -137,7 +134,6 @@ export default function HomePage() {
             text={text}
             subheadline={subheadline}
             cta={cta}
-            showHeadline={showHeadline}
             showSubheadline={showSubheadline}
             showCta={showCta}
             backgroundSrc={backgroundSrc}

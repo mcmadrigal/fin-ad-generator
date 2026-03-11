@@ -28,8 +28,6 @@ interface Props {
   onCtaChange:             (v: string) => void;
   backgroundSrc:           string;
   onBackgroundSrcChange:   (v: string) => void;
-  showHeadline:            boolean;
-  onShowHeadlineChange:    (v: boolean) => void;
   showSubheadline:         boolean;
   onShowSubheadlineChange: (v: boolean) => void;
   showCta:                 boolean;
@@ -38,7 +36,7 @@ interface Props {
   generating:              boolean;
 }
 
-export function AdGeneratorForm({ text, onTextChange, subheadline, onSubheadlineChange, cta, onCtaChange, backgroundSrc, onBackgroundSrcChange, showHeadline, onShowHeadlineChange, showSubheadline, onShowSubheadlineChange, showCta, onShowCtaChange, onGenerate, generating }: Props) {
+export function AdGeneratorForm({ text, onTextChange, subheadline, onSubheadlineChange, cta, onCtaChange, backgroundSrc, onBackgroundSrcChange, showSubheadline, onShowSubheadlineChange, showCta, onShowCtaChange, onGenerate, generating }: Props) {
   const [projectName,  setProjectName]  = useState('');
   const [activeSet,    setActiveSet]    = useState<AssetSetKey>('full');
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(initialSelectedKeys('full'));
@@ -104,7 +102,7 @@ export function AdGeneratorForm({ text, onTextChange, subheadline, onSubheadline
       {/* ── Ad copy ───────────────────────────────────────────────────── */}
       <div>
         <label className="block mb-2" style={{ fontSize: '0.75rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--navy-40)' }}>
-          Ad Copy
+          Headline
           <span style={{ marginLeft: '0.5rem', color: textError ? 'var(--orange)' : 'var(--navy-40)' }}>
             {textWords}/12 words
           </span>
@@ -150,7 +148,6 @@ export function AdGeneratorForm({ text, onTextChange, subheadline, onSubheadline
         </label>
         <div className="flex flex-wrap gap-x-6 gap-y-2">
           {([
-            { label: 'Headline',    checked: showHeadline,    onChange: onShowHeadlineChange },
             { label: 'Subheadline', checked: showSubheadline, onChange: onShowSubheadlineChange },
             { label: 'CTA',         checked: showCta,         onChange: onShowCtaChange },
           ] as const).map(({ label, checked, onChange }) => (

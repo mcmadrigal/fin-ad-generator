@@ -12,7 +12,6 @@ interface Props {
   text:              string;
   subheadline:       string;
   cta:               string;
-  showHeadline:      boolean;
   showSubheadline:   boolean;
   showCta:           boolean;
   backgroundSrc:     string;
@@ -21,7 +20,7 @@ interface Props {
 }
 
 export function PreviewGrid({
-  specs, text, subheadline, cta, showHeadline, showSubheadline, showCta,
+  specs, text, subheadline, cta, showSubheadline, showCta,
   backgroundSrc, projectName, onRegenBackground,
 }: Props) {
   const [lightboxSpec, setLightboxSpec] = useState<AssetSpec | null>(null);
@@ -67,7 +66,6 @@ export function PreviewGrid({
             text={text}
             subheadline={subheadline}
             cta={cta}
-            showHeadline={showHeadline}
             showSubheadline={showSubheadline}
             showCta={showCta}
             backgroundSrc={backgroundSrc}
@@ -95,7 +93,6 @@ export function PreviewGrid({
                   text={text}
                   subheadline={subheadline}
                   cta={cta}
-                  showHeadline={showHeadline}
                   showSubheadline={showSubheadline}
                   showCta={showCta}
                   backgroundSrc={backgroundSrc}
@@ -115,7 +112,6 @@ export function PreviewGrid({
           text={text}
           subheadline={subheadline}
           cta={cta}
-          showHeadline={showHeadline}
           showSubheadline={showSubheadline}
           showCta={showCta}
           backgroundSrc={backgroundSrc}

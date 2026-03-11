@@ -9,14 +9,13 @@ interface Props {
   text:            string;
   subheadline:     string;
   cta:             string;
-  showHeadline:    boolean;
   showSubheadline: boolean;
   showCta:         boolean;
   backgroundSrc:   string;
   onClose:         () => void;
 }
 
-export function AdLightbox({ spec, text, subheadline, cta, showHeadline, showSubheadline, showCta, backgroundSrc, onClose }: Props) {
+export function AdLightbox({ spec, text, subheadline, cta, showSubheadline, showCta, backgroundSrc, onClose }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Scale ad to fit inside 88vw × 80vh, never upscale beyond spec dimensions
@@ -32,11 +31,11 @@ export function AdLightbox({ spec, text, subheadline, cta, showHeadline, showSub
     try {
       // Render at lightbox display size; pass original spec dims for correct
       // FORMAT_SPEC lookup and proportional font scaling.
-      await renderAdToCanvas(canvas, lw, lh, text, subheadline, cta, showHeadline, showSubheadline, showCta, backgroundSrc, spec.width, spec.height);
+      await renderAdToCanvas(canvas, lw, lh, text, subheadline, cta, showSubheadline, showCta, backgroundSrc, spec.width, spec.height);
     } catch (err) {
       console.error('[AdLightbox] render failed:', err);
     }
-  }, [lw, lh, text, subheadline, cta, showHeadline, showSubheadline, showCta, backgroundSrc, spec.width, spec.height]);
+  }, [lw, lh, text, subheadline, cta, showSubheadline, showCta, backgroundSrc, spec.width, spec.height]);
 
   useEffect(() => {
     render();

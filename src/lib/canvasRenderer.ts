@@ -154,7 +154,6 @@ export async function renderAdToCanvas(
   text: string,
   subheadline: string,
   cta: string,
-  showHeadline: boolean,
   showSubheadline: boolean,
   showCta: boolean,
   backgroundSrc: string,
@@ -200,11 +199,11 @@ export async function renderAdToCanvas(
 
   // 5. Route to layout
   if (spec.layoutStyle === 'poster') {
-    renderPosterLayout(ctx, W, H, text, subheadline, cta, showHeadline, showSubheadline, showCta, logoImg, spec, isPortrait);
+    renderPosterLayout(ctx, W, H, text, subheadline, cta, showSubheadline, showCta, logoImg, spec, isPortrait);
   } else if (spec.layout === 'horizontal') {
-    renderHorizontalLayout(ctx, W, H, text, cta, showHeadline, showCta, logoImg, spec);
+    renderHorizontalLayout(ctx, W, H, text, cta, showCta, logoImg, spec);
   } else {
-    renderVerticalLayout(ctx, W, H, text, cta, showHeadline, showCta, logoImg, spec, isPortrait);
+    renderVerticalLayout(ctx, W, H, text, cta, showCta, logoImg, spec, isPortrait);
   }
 }
 
@@ -215,7 +214,7 @@ function renderVerticalLayout(
   ctx: CanvasRenderingContext2D,
   W: number, H: number,
   text: string, cta: string,
-  showHeadline: boolean, showCta: boolean,
+  showCta: boolean,
   logoImg: HTMLImageElement,
   spec: FormatSpec,
   isPortrait: boolean,
@@ -241,7 +240,7 @@ function renderVerticalLayout(
   }
 
   // ── Headline (middle third, centered) ─────────────────────────────────────
-  if (showHeadline) {
+  {
     let headlinePx = spec.headlinePx;   // mutable — may be reduced for overflow
     const { headLS, headLH } = spec;
     const maxW   = W - padX * 2;
@@ -308,7 +307,7 @@ function renderPosterLayout(
   ctx: CanvasRenderingContext2D,
   W: number, H: number,
   text: string, subheadline: string, cta: string,
-  showHeadline: boolean, showSubheadline: boolean, showCta: boolean,
+  showSubheadline: boolean, showCta: boolean,
   logoImg: HTMLImageElement,
   spec: FormatSpec,
   isPortrait: boolean,
@@ -375,7 +374,7 @@ function renderPosterLayout(
   }
 
   // ── Headline + Subheadline (fills the large middle zone) ─────────────────
-  if (showHeadline) {
+  {
     const headlineZoneTop = spec.logoZonePct !== undefined
       ? H * spec.logoZonePct
       : padY + logoH + innerGap;
@@ -393,7 +392,7 @@ function renderPosterLayout(
     const wordsPerLine  = spec.maxWordsPerLine ?? 3;
     const floorPx       = Math.max(14, H * 0.02);
 
-    const subPx = ctaPx * 1.82;
+    const subPx = ctaPx * 2.0;
 
     let lines: string[] = [];
     // Overflow-reduction loop — re-wraps on each iteration for pixel-based mode
@@ -418,7 +417,7 @@ function renderPosterLayout(
 
     if (lines.length === 0) return;
 
-    const lineH      = headlinePx * headLH;
+    const lineH      = headlinePx * (headLH * 0.95);
     const blockH     = textBlockHeight(lines.length, lineH);
     const textStartY = headlineZoneTop + (headlineZoneH - blockH) / 2;
 
@@ -441,11 +440,11 @@ function renderPosterLayout(
 
     // ── Subheadline (optional, below headline block) ────────────────────────
     if (showSubheadline && subheadline.trim().length > 0) {
-      const subGap = headlinePx * 0.45;
+      const subGap = headlinePx * 0.55;
       const subY   = textStartY + blockH + subGap;
 
       ctx.font         = ctaFont(subPx);
-      ctx.fillStyle    = 'rgba(255,255,255,0.65)';
+      ctx.fillStyle    = '#FFFFFF';
       ctx.textBaseline = 'top';
       setLetterSpacing(ctx, 0);
 
@@ -474,7 +473,7 @@ function renderHorizontalLayout(
   ctx: CanvasRenderingContext2D,
   W: number, H: number,
   text: string, cta: string,
-  showHeadline: boolean, showCta: boolean,
+  showCta: boolean,
   logoImg: HTMLImageElement,
   spec: FormatSpec,
 ): void {
@@ -522,7 +521,7 @@ function renderHorizontalLayout(
   }
 
   // ── Headline (center zone) ────────────────────────────────────────────────
-  if (showHeadline) {
+  {
     const textStart  = padX + logoW + padX;
     const textEnd    = showCta ? ruleX - padX : W - padX;
     const textAvailW = textEnd - textStart;
