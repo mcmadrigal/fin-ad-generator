@@ -20,24 +20,35 @@ function initialSelectedKeys(setKey: AssetSetKey): Set<string> {
 
 interface Props {
   // Controlled copy fields — lifted to page so previews update live
-  text:         string;
-  onTextChange: (v: string) => void;
-  cta:          string;
-  onCtaChange:  (v: string) => void;
-  onGenerate:   (state: FormState) => void;
-  generating:   boolean;
+  text:                    string;
+  onTextChange:            (v: string) => void;
+  subheadline:             string;
+  onSubheadlineChange:     (v: string) => void;
+  cta:                     string;
+  onCtaChange:             (v: string) => void;
+  backgroundSrc:           string;
+  onBackgroundSrcChange:   (v: string) => void;
+  showHeadline:            boolean;
+  onShowHeadlineChange:    (v: boolean) => void;
+  showSubheadline:         boolean;
+  onShowSubheadlineChange: (v: boolean) => void;
+  showCta:                 boolean;
+  onShowCtaChange:         (v: boolean) => void;
+  onGenerate:              (state: FormState) => void;
+  generating:              boolean;
 }
 
-export function AdGeneratorForm({ text, onTextChange, cta, onCtaChange, onGenerate, generating }: Props) {
-  const [projectName,   setProjectName]   = useState('');
-  const [activeSet,     setActiveSet]     = useState<AssetSetKey>('full');
-  const [selectedKeys,  setSelectedKeys]  = useState<Set<string>>(initialSelectedKeys('full'));
-  const [backgroundSrc, setBackgroundSrc] = useState(BG_IMAGES[0].src);
+export function AdGeneratorForm({ text, onTextChange, subheadline, onSubheadlineChange, cta, onCtaChange, backgroundSrc, onBackgroundSrcChange, showHeadline, onShowHeadlineChange, showSubheadline, onShowSubheadlineChange, showCta, onShowCtaChange, onGenerate, generating }: Props) {
+  const [projectName,  setProjectName]  = useState('');
+  const [activeSet,    setActiveSet]    = useState<AssetSetKey>('full');
+  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(initialSelectedKeys('full'));
 
-  const textWords = countWords(text);
-  const ctaWords  = countWords(cta);
-  const textError = textWords > 12;
-  const ctaError  = ctaWords  > 4;
+  const textWords        = countWords(text);
+  const subheadlineWords = countWords(subheadline);
+  const ctaWords         = countWords(cta);
+  const textError        = textWords > 12;
+  const subheadlineError = subheadlineWords > 10;
+  const ctaError         = ctaWords  > 4;
 
   const handleSetChange = useCallback((setKey: AssetSetKey) => {
     setActiveSet(setKey);
@@ -57,6 +68,7 @@ export function AdGeneratorForm({ text, onTextChange, cta, onCtaChange, onGenera
     text.trim().length > 0 &&
     cta.trim().length > 0 &&
     !textError &&
+    !subheadlineError &&
     !ctaError &&
     selectedKeys.size > 0 &&
     !generating;
@@ -110,6 +122,55 @@ export function AdGeneratorForm({ text, onTextChange, cta, onCtaChange, onGenera
         )}
       </div>
 
+      {/* ── Subheadline ───────────────────────────────────────────────── */}
+      <div>
+        <label className="block mb-2" style={{ fontSize: '0.75rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--navy-40)' }}>
+          Subheadline
+          <span style={{ marginLeft: '0.5rem', color: subheadlineError ? 'var(--orange)' : 'var(--navy-40)' }}>
+            {subheadlineWords}/10 words
+          </span>
+        </label>
+        <textarea
+          className={`fin-input${subheadlineError ? ' error' : ''}`}
+          rows={2}
+          placeholder="Optional supporting line below the headline"
+          value={subheadline}
+          onChange={e => onSubheadlineChange(e.target.value)}
+          style={{ resize: 'vertical', minHeight: '52px' }}
+        />
+        {subheadlineError && (
+          <p className="mt-1" style={{ fontSize: '0.7rem', color: 'var(--orange)' }}>Max 10 words</p>
+        )}
+      </div>
+
+      {/* ── Element toggles ───────────────────────────────────────────── */}
+      <div>
+        <label className="block mb-3" style={{ fontSize: '0.75rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--navy-40)' }}>
+          Show Elements
+        </label>
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          {([
+            { label: 'Headline',    checked: showHeadline,    onChange: onShowHeadlineChange },
+            { label: 'Subheadline', checked: showSubheadline, onChange: onShowSubheadlineChange },
+            { label: 'CTA',         checked: showCta,         onChange: onShowCtaChange },
+          ] as const).map(({ label, checked, onChange }) => (
+            <label
+              key={label}
+              className="flex items-center gap-1.5 cursor-pointer"
+              style={{ fontSize: '0.75rem', color: checked ? 'var(--stark-white)' : 'var(--navy-40)' }}
+            >
+              <input
+                type="checkbox"
+                className="fin-checkbox"
+                checked={checked}
+                onChange={e => onChange(e.target.checked)}
+              />
+              {label}
+            </label>
+          ))}
+        </div>
+      </div>
+
       {/* ── CTA ────────────────────────────────────────────────────────── */}
       <div>
         <label className="block mb-2" style={{ fontSize: '0.75rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--navy-40)' }}>
@@ -141,7 +202,7 @@ export function AdGeneratorForm({ text, onTextChange, cta, onCtaChange, onGenera
             <button
               key={bg.src}
               type="button"
-              onClick={() => setBackgroundSrc(bg.src)}
+              onClick={() => onBackgroundSrcChange(bg.src)}
               style={{
                 border:       `2px solid ${backgroundSrc === bg.src ? 'var(--orange)' : 'var(--navy-20)'}`,
                 borderRadius: '3px',
@@ -162,6 +223,39 @@ export function AdGeneratorForm({ text, onTextChange, cta, onCtaChange, onGenera
             </button>
           ))}
         </div>
+
+        <label
+          className="block mt-3"
+          style={{ fontSize: '0.75rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--navy-40)', cursor: 'pointer' }}
+        >
+          <span style={{ display: 'block', marginBottom: '0.5rem' }}>Upload background</span>
+          <span style={{
+            display:       'block',
+            border:        '1px dashed var(--navy-20)',
+            borderRadius:  '3px',
+            color:         'var(--navy-40)',
+            fontSize:      '0.75rem',
+            letterSpacing: '0.04em',
+            padding:       '0.4rem 0.75rem',
+            textAlign:     'center',
+            textTransform: 'none',
+            transition:    'border-color 150ms ease, color 150ms ease',
+          }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--stark-white)'; (e.currentTarget as HTMLElement).style.color = 'var(--stark-white)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--navy-20)';    (e.currentTarget as HTMLElement).style.color = 'var(--navy-40)'; }}
+          >
+            Choose file…
+          </span>
+          <input
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={e => {
+              const file = e.target.files?.[0];
+              if (file) onBackgroundSrcChange(URL.createObjectURL(file));
+            }}
+          />
+        </label>
       </div>
 
       {/* ── Asset set selector ────────────────────────────────────────── */}

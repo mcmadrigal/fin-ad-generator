@@ -10,14 +10,19 @@ import { AdLightbox } from './AdLightbox';
 interface Props {
   specs:             AssetSpec[];
   text:              string;
+  subheadline:       string;
   cta:               string;
+  showHeadline:      boolean;
+  showSubheadline:   boolean;
+  showCta:           boolean;
   backgroundSrc:     string;
   projectName:       string;
   onRegenBackground: () => void;
 }
 
 export function PreviewGrid({
-  specs, text, cta, backgroundSrc, projectName, onRegenBackground,
+  specs, text, subheadline, cta, showHeadline, showSubheadline, showCta,
+  backgroundSrc, projectName, onRegenBackground,
 }: Props) {
   const [lightboxSpec, setLightboxSpec] = useState<AssetSpec | null>(null);
 
@@ -60,7 +65,11 @@ export function PreviewGrid({
           <DownloadButton
             specs={specs}
             text={text}
+            subheadline={subheadline}
             cta={cta}
+            showHeadline={showHeadline}
+            showSubheadline={showSubheadline}
+            showCta={showCta}
             backgroundSrc={backgroundSrc}
             projectName={projectName}
             disabled={!hasSpecs}
@@ -84,7 +93,11 @@ export function PreviewGrid({
                 <CanvasAd
                   spec={spec}
                   text={text}
+                  subheadline={subheadline}
                   cta={cta}
+                  showHeadline={showHeadline}
+                  showSubheadline={showSubheadline}
+                  showCta={showCta}
                   backgroundSrc={backgroundSrc}
                   onClick={() => setLightboxSpec(spec)}
                 />
@@ -100,7 +113,11 @@ export function PreviewGrid({
         <AdLightbox
           spec={lightboxSpec}
           text={text}
+          subheadline={subheadline}
           cta={cta}
+          showHeadline={showHeadline}
+          showSubheadline={showSubheadline}
+          showCta={showCta}
           backgroundSrc={backgroundSrc}
           onClose={() => setLightboxSpec(null)}
         />

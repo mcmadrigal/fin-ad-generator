@@ -152,7 +152,11 @@ export async function renderAdToCanvas(
   width: number,
   height: number,
   text: string,
+  subheadline: string,
   cta: string,
+  showHeadline: boolean,
+  showSubheadline: boolean,
+  showCta: boolean,
   backgroundSrc: string,
   specWidth?: number,
   specHeight?: number,
@@ -196,11 +200,11 @@ export async function renderAdToCanvas(
 
   // 5. Route to layout
   if (spec.layoutStyle === 'poster') {
-    renderPosterLayout(ctx, W, H, text, cta, logoImg, spec, isPortrait);
+    renderPosterLayout(ctx, W, H, text, subheadline, cta, showHeadline, showSubheadline, showCta, logoImg, spec, isPortrait);
   } else if (spec.layout === 'horizontal') {
-    renderHorizontalLayout(ctx, W, H, text, cta, logoImg, spec);
+    renderHorizontalLayout(ctx, W, H, text, cta, showHeadline, showCta, logoImg, spec);
   } else {
-    renderVerticalLayout(ctx, W, H, text, cta, logoImg, spec, isPortrait);
+    renderVerticalLayout(ctx, W, H, text, cta, showHeadline, showCta, logoImg, spec, isPortrait);
   }
 }
 
@@ -211,6 +215,7 @@ function renderVerticalLayout(
   ctx: CanvasRenderingContext2D,
   W: number, H: number,
   text: string, cta: string,
+  showHeadline: boolean, showCta: boolean,
   logoImg: HTMLImageElement,
   spec: FormatSpec,
   isPortrait: boolean,
@@ -228,7 +233,7 @@ function renderVerticalLayout(
   ctx.drawImage(logoImg, (W - logoW) / 2, padY + (thirdH - logoH) / 2, logoW, logoH);
 
   // ── CTA (bottom third, anchored near bottom edge) ─────────────────────────
-  if (spec.ctaPx !== null) {
+  if (showCta && spec.ctaPx !== null) {
     const ruleH   = Math.max(0.5, spec.ctaPx * 0.05);
     const ruleGap = Math.max(1,   spec.ctaPx * 0.15);
     const ctaY    = H - padY - spec.ctaPx - ruleGap - ruleH;
@@ -236,62 +241,64 @@ function renderVerticalLayout(
   }
 
   // ── Headline (middle third, centered) ─────────────────────────────────────
-  let headlinePx = spec.headlinePx;   // mutable — may be reduced for overflow
-  const { headLS, headLH } = spec;
-  const maxW   = W - padX * 2;
-  const midTop = padY + thirdH;
-  const midH   = thirdH;
+  if (showHeadline) {
+    let headlinePx = spec.headlinePx;   // mutable — may be reduced for overflow
+    const { headLS, headLH } = spec;
+    const maxW   = W - padX * 2;
+    const midTop = padY + thirdH;
+    const midH   = thirdH;
 
-  // Determine wrapping strategy
-  let lines: string[];
-  if (spec.maxWordsPerLine !== undefined) {
-    // Word-count-based wrap (enforced regardless of landscape/portrait)
-    setLetterSpacing(ctx, headLS * headlinePx);
-    ctx.font = headlineFont(headlinePx);
-    lines = wrapPortraitText(text, spec.maxWordsPerLine);
-
-    // Pixel-overflow safety: reduce font until every line fits within maxW
-    let maxLineW = Math.max(...lines.map(l => ctx.measureText(l).width));
-    const floorPx = 8;
-    while (maxLineW > maxW && headlinePx > floorPx) {
-      headlinePx = Math.max(floorPx, headlinePx - 0.5);
+    // Determine wrapping strategy
+    let lines: string[];
+    if (spec.maxWordsPerLine !== undefined) {
+      // Word-count-based wrap (enforced regardless of landscape/portrait)
       setLetterSpacing(ctx, headLS * headlinePx);
       ctx.font = headlineFont(headlinePx);
-      maxLineW = Math.max(...lines.map(l => ctx.measureText(l).width));
-    }
-  } else if (isPortrait) {
-    // Portrait default: max 4 words/line, pixel-overflow safety included
-    setLetterSpacing(ctx, headLS * headlinePx);
-    ctx.font = headlineFont(headlinePx);
-    lines = wrapPortraitText(text, 4);
+      lines = wrapPortraitText(text, spec.maxWordsPerLine);
 
-    let maxLineW = Math.max(...lines.map(l => ctx.measureText(l).width));
-    const floorPx = 8;
-    while (maxLineW > maxW && headlinePx > floorPx) {
-      headlinePx = Math.max(floorPx, headlinePx - 0.5);
+      // Pixel-overflow safety: reduce font until every line fits within maxW
+      let maxLineW = Math.max(...lines.map(l => ctx.measureText(l).width));
+      const floorPx = 8;
+      while (maxLineW > maxW && headlinePx > floorPx) {
+        headlinePx = Math.max(floorPx, headlinePx - 0.5);
+        setLetterSpacing(ctx, headLS * headlinePx);
+        ctx.font = headlineFont(headlinePx);
+        maxLineW = Math.max(...lines.map(l => ctx.measureText(l).width));
+      }
+    } else if (isPortrait) {
+      // Portrait default: max 4 words/line, pixel-overflow safety included
       setLetterSpacing(ctx, headLS * headlinePx);
       ctx.font = headlineFont(headlinePx);
-      maxLineW = Math.max(...lines.map(l => ctx.measureText(l).width));
+      lines = wrapPortraitText(text, 4);
+
+      let maxLineW = Math.max(...lines.map(l => ctx.measureText(l).width));
+      const floorPx = 8;
+      while (maxLineW > maxW && headlinePx > floorPx) {
+        headlinePx = Math.max(floorPx, headlinePx - 0.5);
+        setLetterSpacing(ctx, headLS * headlinePx);
+        ctx.font = headlineFont(headlinePx);
+        maxLineW = Math.max(...lines.map(l => ctx.measureText(l).width));
+      }
+    } else {
+      // Landscape/square: pixel-width wrap
+      setLetterSpacing(ctx, headLS * headlinePx);
+      ctx.font = headlineFont(headlinePx);
+      lines = wrapText(ctx, text, maxW);
     }
-  } else {
-    // Landscape/square: pixel-width wrap
-    setLetterSpacing(ctx, headLS * headlinePx);
-    ctx.font = headlineFont(headlinePx);
-    lines = wrapText(ctx, text, maxW);
+
+    const lineH  = headlinePx * headLH;
+    const blockH = textBlockHeight(lines.length, lineH);
+
+    ctx.fillStyle    = '#FFFFFF';
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'top';
+
+    const textStartY = midTop + (midH - blockH) / 2;
+    for (let i = 0; i < lines.length; i++) {
+      ctx.fillText(lines[i], W / 2, textStartY + i * lineH);
+    }
+    setLetterSpacing(ctx, 0);
   }
-
-  const lineH  = headlinePx * headLH;
-  const blockH = textBlockHeight(lines.length, lineH);
-
-  ctx.fillStyle    = '#FFFFFF';
-  ctx.textAlign    = 'center';
-  ctx.textBaseline = 'top';
-
-  const textStartY = midTop + (midH - blockH) / 2;
-  for (let i = 0; i < lines.length; i++) {
-    ctx.fillText(lines[i], W / 2, textStartY + i * lineH);
-  }
-  setLetterSpacing(ctx, 0);
 }
 
 // ---------------------------------------------------------------------------
@@ -300,7 +307,8 @@ function renderVerticalLayout(
 function renderPosterLayout(
   ctx: CanvasRenderingContext2D,
   W: number, H: number,
-  text: string, cta: string,
+  text: string, subheadline: string, cta: string,
+  showHeadline: boolean, showSubheadline: boolean, showCta: boolean,
   logoImg: HTMLImageElement,
   spec: FormatSpec,
   isPortrait: boolean,
@@ -354,7 +362,7 @@ function renderPosterLayout(
     : H - padY - ctaBlockH;
 
   // ── Draw CTA ──────────────────────────────────────────────────────────────
-  if (spec.ctaPx !== null && ctaLines.length > 0) {
+  if (showCta && spec.ctaPx !== null && ctaLines.length > 0) {
     for (let i = 0; i < ctaLines.length; i++) {
       const lineY  = ctaY + (ctaNumLines > 1 ? i * ctaLineH : 0);
       const isLast = i === ctaLines.length - 1;
@@ -366,64 +374,93 @@ function renderPosterLayout(
     }
   }
 
-  // ── Headline (fills the large middle zone) ────────────────────────────────
-  const headlineZoneTop = spec.logoZonePct !== undefined
-    ? H * spec.logoZonePct
-    : padY + logoH + innerGap;
-  const headlineZoneBot = spec.ctaZonePct !== undefined
-    ? H * (1 - spec.ctaZonePct)
-    : ctaY - innerGap;
-  const headlineZoneH   = headlineZoneBot - headlineZoneTop;
+  // ── Headline + Subheadline (fills the large middle zone) ─────────────────
+  if (showHeadline) {
+    const headlineZoneTop = spec.logoZonePct !== undefined
+      ? H * spec.logoZonePct
+      : padY + logoH + innerGap;
+    const headlineZoneBot = spec.ctaZonePct !== undefined
+      ? H * (1 - spec.ctaZonePct)
+      : ctaY - innerGap;
+    const headlineZoneH   = headlineZoneBot - headlineZoneTop;
 
-  if (headlineZoneH <= 0 || text.trim().length === 0) return;
+    if (headlineZoneH <= 0 || text.trim().length === 0) return;
 
-  let headlinePx = spec.headlinePx;
-  const { headLS, headLH } = spec;
-  // Landscape/square without explicit word limit → pixel-based wrapping fills full width
-  const usePixelWrap = spec.maxWordsPerLine === undefined && !isPortrait;
-  const wordsPerLine  = spec.maxWordsPerLine ?? 3;
-  const floorPx       = Math.max(14, H * 0.02);
+    let headlinePx = spec.headlinePx;
+    const { headLS, headLH } = spec;
+    // Landscape/square without explicit word limit → pixel-based wrapping fills full width
+    const usePixelWrap = spec.maxWordsPerLine === undefined && !isPortrait;
+    const wordsPerLine  = spec.maxWordsPerLine ?? 3;
+    const floorPx       = Math.max(14, H * 0.02);
 
-  let lines: string[] = [];
-  // Overflow-reduction loop — re-wraps on each iteration for pixel-based mode
-  while (true) {
-    setLetterSpacing(ctx, headLS * headlinePx);
-    ctx.font = headlineFont(headlinePx);
-    lines = usePixelWrap
-      ? wrapText(ctx, text, maxW)
-      : wrapPortraitText(text, wordsPerLine);
-    if (lines.length === 0) break;
-    if (spec.noAutoShrink) break;
-    const lineH    = headlinePx * headLH;
-    const blockH   = textBlockHeight(lines.length, lineH);
-    const maxLineW = Math.max(...lines.map(l => ctx.measureText(l).width));
-    if (blockH <= headlineZoneH && maxLineW <= maxW) break;
-    if (headlinePx <= floorPx) break;
-    headlinePx = Math.max(floorPx, headlinePx - 0.5);
-  }
-
-  if (lines.length === 0) return;
-
-  const lineH      = headlinePx * headLH;
-  const blockH     = textBlockHeight(lines.length, lineH);
-  const textStartY = headlineZoneTop + (headlineZoneH - blockH) / 2;
-
-  ctx.fillStyle    = '#FFFFFF';
-  ctx.textBaseline = 'top';
-
-  if (align === 'left') {
-    ctx.textAlign = 'left';
-    for (let i = 0; i < lines.length; i++) {
-      ctx.fillText(lines[i], padX, textStartY + i * lineH);
+    let lines: string[] = [];
+    // Overflow-reduction loop — re-wraps on each iteration for pixel-based mode
+    while (true) {
+      setLetterSpacing(ctx, headLS * headlinePx);
+      ctx.font = headlineFont(headlinePx);
+      lines = usePixelWrap
+        ? wrapText(ctx, text, maxW)
+        : wrapPortraitText(text, wordsPerLine);
+      if (lines.length === 0) break;
+      if (spec.noAutoShrink) break;
+      const lineH    = headlinePx * headLH;
+      const blockH   = textBlockHeight(lines.length, lineH);
+      const maxLineW = Math.max(...lines.map(l => ctx.measureText(l).width));
+      if (blockH <= headlineZoneH && maxLineW <= maxW) break;
+      if (headlinePx <= floorPx) break;
+      headlinePx = Math.max(floorPx, headlinePx - 0.5);
     }
-  } else {
-    ctx.textAlign = 'center';
-    for (let i = 0; i < lines.length; i++) {
-      ctx.fillText(lines[i], W / 2, textStartY + i * lineH);
+
+    if (lines.length === 0) return;
+
+    const lineH      = headlinePx * headLH;
+    const blockH     = textBlockHeight(lines.length, lineH);
+    const textStartY = headlineZoneTop + (headlineZoneH - blockH) / 2;
+
+    ctx.fillStyle    = '#FFFFFF';
+    ctx.textBaseline = 'top';
+
+    if (align === 'left') {
+      ctx.textAlign = 'left';
+      for (let i = 0; i < lines.length; i++) {
+        ctx.fillText(lines[i], padX, textStartY + i * lineH);
+      }
+    } else {
+      ctx.textAlign = 'center';
+      for (let i = 0; i < lines.length; i++) {
+        ctx.fillText(lines[i], W / 2, textStartY + i * lineH);
+      }
+    }
+
+    setLetterSpacing(ctx, 0);
+
+    // ── Subheadline (optional, below headline block) ────────────────────────
+    if (showSubheadline && subheadline.trim().length > 0) {
+      const subPx  = ctaPx * 1.4;
+      const subGap = headlinePx * 0.35;
+      const subY   = textStartY + blockH + subGap;
+
+      ctx.font         = headlineFont(subPx);
+      ctx.fillStyle    = 'rgba(255,255,255,0.65)';
+      ctx.textBaseline = 'top';
+      setLetterSpacing(ctx, 0);
+
+      const subLines = wrapText(ctx, subheadline, maxW);
+      const subLineH = subPx * headLH;
+
+      if (align === 'left') {
+        ctx.textAlign = 'left';
+        for (let i = 0; i < subLines.length; i++) {
+          ctx.fillText(subLines[i], padX, subY + i * subLineH);
+        }
+      } else {
+        ctx.textAlign = 'center';
+        for (let i = 0; i < subLines.length; i++) {
+          ctx.fillText(subLines[i], W / 2, subY + i * subLineH);
+        }
+      }
     }
   }
-
-  setLetterSpacing(ctx, 0);
 }
 
 // ---------------------------------------------------------------------------
@@ -433,6 +470,7 @@ function renderHorizontalLayout(
   ctx: CanvasRenderingContext2D,
   W: number, H: number,
   text: string, cta: string,
+  showHeadline: boolean, showCta: boolean,
   logoImg: HTMLImageElement,
   spec: FormatSpec,
 ): void {
@@ -445,6 +483,7 @@ function renderHorizontalLayout(
   ctx.drawImage(logoImg, padX, midY - logoH / 2, logoW, logoH);
 
   // ── CTA (right, char-by-char for precise alignment) ───────────────────────
+  // Measure CTA dimensions regardless of visibility — ruleX bounds the headline zone.
   const ctaPx      = spec.ctaPx ?? spec.headlinePx * 0.4;
   const ctaDisplay = cta.toUpperCase();
   const letterSp   = ctaPx * 0.10;
@@ -456,62 +495,66 @@ function renderHorizontalLayout(
   const ruleH      = Math.max(0.5, H * 0.012);
   const ruleGap    = Math.max(1,   ctaPx * 0.15);
   const ctaTextY   = midY - (ctaPx + ruleGap + ruleH) / 2;
+  const ruleW      = ctaTextW + ctaPx * 0.4;
+  const ruleX      = W - padX - ruleW;
+  const ruleY      = ctaTextY + ctaPx + ruleGap;
 
-  ctx.fillStyle    = '#FFFFFF';
-  ctx.textBaseline = 'top';
-  let cx = W - padX - ctaTextW;
-  for (let i = 0; i < chars.length; i++) {
-    ctx.fillText(chars[i], cx, ctaTextY);
-    cx += charWidths[i] + letterSp;
+  if (showCta) {
+    ctx.fillStyle    = '#FFFFFF';
+    ctx.textBaseline = 'top';
+    let cx = W - padX - ctaTextW;
+    for (let i = 0; i < chars.length; i++) {
+      ctx.fillText(chars[i], cx, ctaTextY);
+      cx += charWidths[i] + letterSp;
+    }
+
+    // Underline rule
+    ctx.beginPath();
+    ctx.moveTo(ruleX, ruleY);
+    ctx.lineTo(W - padX, ruleY);
+    ctx.strokeStyle = 'rgba(255,255,255,0.60)';
+    ctx.lineWidth   = ruleH;
+    ctx.stroke();
   }
 
-  // Underline rule
-  const ruleW = ctaTextW + ctaPx * 0.4;
-  const ruleX = W - padX - ruleW;
-  const ruleY = ctaTextY + ctaPx + ruleGap;
-  ctx.beginPath();
-  ctx.moveTo(ruleX, ruleY);
-  ctx.lineTo(W - padX, ruleY);
-  ctx.strokeStyle = 'rgba(255,255,255,0.60)';
-  ctx.lineWidth   = ruleH;
-  ctx.stroke();
-
   // ── Headline (center zone) ────────────────────────────────────────────────
-  const textStart  = padX + logoW + padX;
-  const textEnd    = ruleX - padX;
-  const textAvailW = textEnd - textStart;
+  if (showHeadline) {
+    const textStart  = padX + logoW + padX;
+    const textEnd    = showCta ? ruleX - padX : W - padX;
+    const textAvailW = textEnd - textStart;
 
-  if (textAvailW > 20) {
-    let headlinePx  = spec.headlinePx;  // mutable for auto-shrink
-    const { headLS } = spec;
+    if (textAvailW > 20) {
+      let headlinePx  = spec.headlinePx;  // mutable for auto-shrink
+      const { headLS } = spec;
 
-    setLetterSpacing(ctx, headLS * headlinePx);
-    ctx.font         = headlineFont(headlinePx);
-    ctx.fillStyle    = '#FFFFFF';
-    ctx.textAlign    = 'center';
-    ctx.textBaseline = 'middle';
+      setLetterSpacing(ctx, headLS * headlinePx);
+      ctx.font         = headlineFont(headlinePx);
+      ctx.fillStyle    = '#FFFFFF';
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'middle';
 
-    if (spec.autoShrinkHeadline) {
-      // Reduce font size until full text fits — no truncation, floor at headlineFloorPx
-      const floorPx = spec.headlineFloorPx ?? 8;
-      while (ctx.measureText(text).width > textAvailW && headlinePx > floorPx) {
-        headlinePx = Math.max(floorPx, headlinePx - 0.5);
-        setLetterSpacing(ctx, headLS * headlinePx);
-        ctx.font = headlineFont(headlinePx);
+      if (spec.autoShrinkHeadline) {
+        // Reduce font size until full text fits — no truncation, floor at headlineFloorPx
+        const floorPx = spec.headlineFloorPx ?? 8;
+        while (ctx.measureText(text).width > textAvailW && headlinePx > floorPx) {
+          headlinePx = Math.max(floorPx, headlinePx - 0.5);
+          setLetterSpacing(ctx, headLS * headlinePx);
+          ctx.font = headlineFont(headlinePx);
+        }
+        ctx.fillText(text, textStart + textAvailW / 2, midY);
+      } else {
+        // Default: truncate with ellipsis
+        let displayText = text;
+        while (ctx.measureText(displayText).width > textAvailW && displayText.length > 1) {
+          const lastSpace = displayText.lastIndexOf(' ');
+          displayText = lastSpace > 0
+            ? displayText.substring(0, lastSpace) + '…'
+            : displayText.slice(0, -2) + '…';
+        }
+        ctx.fillText(displayText, textStart + textAvailW / 2, midY);
       }
-      ctx.fillText(text, textStart + textAvailW / 2, midY);
-    } else {
-      // Default: truncate with ellipsis
-      let displayText = text;
-      while (ctx.measureText(displayText).width > textAvailW && displayText.length > 1) {
-        const lastSpace = displayText.lastIndexOf(' ');
-        displayText = lastSpace > 0
-          ? displayText.substring(0, lastSpace) + '…'
-          : displayText.slice(0, -2) + '…';
-      }
-      ctx.fillText(displayText, textStart + textAvailW / 2, midY);
+      setLetterSpacing(ctx, 0);
     }
-    setLetterSpacing(ctx, 0);
   }
 }
 

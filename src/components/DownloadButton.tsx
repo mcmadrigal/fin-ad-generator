@@ -5,16 +5,21 @@ import type { AssetSpec } from '@/types';
 import { buildAndDownloadZip } from '@/lib/zipPackager';
 
 interface Props {
-  specs:          AssetSpec[];
-  text:           string;
-  cta:            string;
-  backgroundSrc:  string;
-  projectName:    string;
-  disabled?:      boolean;
+  specs:           AssetSpec[];
+  text:            string;
+  subheadline:     string;
+  cta:             string;
+  showHeadline:    boolean;
+  showSubheadline: boolean;
+  showCta:         boolean;
+  backgroundSrc:   string;
+  projectName:     string;
+  disabled?:       boolean;
 }
 
 export function DownloadButton({
-  specs, text, cta, backgroundSrc, projectName, disabled,
+  specs, text, subheadline, cta, showHeadline, showSubheadline, showCta,
+  backgroundSrc, projectName, disabled,
 }: Props) {
   const [progress,    setProgress]    = useState<{ done: number; total: number } | null>(null);
   const [downloading, setDownloading] = useState(false);
@@ -26,7 +31,7 @@ export function DownloadButton({
 
     try {
       await buildAndDownloadZip(
-        specs.map(spec => ({ spec, text, cta, backgroundSrc, projectName })),
+        specs.map(spec => ({ spec, text, subheadline, cta, showHeadline, showSubheadline, showCta, backgroundSrc, projectName })),
         (done, total) => setProgress({ done, total }),
       );
     } catch (err) {

@@ -12,14 +12,18 @@ function calcPreviewDims(w: number, h: number): { pw: number; ph: number } {
 }
 
 interface Props {
-  spec:          AssetSpec;
-  text:          string;
-  cta:           string;
-  backgroundSrc: string;
-  onClick?:      () => void;
+  spec:            AssetSpec;
+  text:            string;
+  subheadline:     string;
+  cta:             string;
+  showHeadline:    boolean;
+  showSubheadline: boolean;
+  showCta:         boolean;
+  backgroundSrc:   string;
+  onClick?:        () => void;
 }
 
-export function CanvasAd({ spec, text, cta, backgroundSrc, onClick }: Props) {
+export function CanvasAd({ spec, text, subheadline, cta, showHeadline, showSubheadline, showCta, backgroundSrc, onClick }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { pw, ph } = calcPreviewDims(spec.width, spec.height);
 
@@ -29,11 +33,11 @@ export function CanvasAd({ spec, text, cta, backgroundSrc, onClick }: Props) {
     try {
       // Pass spec.width/height so renderAdToCanvas can look up the correct
       // FORMAT_SPEC and apply proportional scaling to the preview dimensions.
-      await renderAdToCanvas(canvas, pw, ph, text, cta, backgroundSrc, spec.width, spec.height);
+      await renderAdToCanvas(canvas, pw, ph, text, subheadline, cta, showHeadline, showSubheadline, showCta, backgroundSrc, spec.width, spec.height);
     } catch (err) {
       console.error(`[CanvasAd] render failed for ${spec.key}:`, err);
     }
-  }, [pw, ph, text, cta, backgroundSrc, spec.key, spec.width, spec.height]);
+  }, [pw, ph, text, subheadline, cta, showHeadline, showSubheadline, showCta, backgroundSrc, spec.key, spec.width, spec.height]);
 
   useEffect(() => {
     render();

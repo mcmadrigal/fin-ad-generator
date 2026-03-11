@@ -9,20 +9,27 @@ import { AdGeneratorForm } from '@/components/AdGeneratorForm';
 import { PreviewGrid } from '@/components/PreviewGrid';
 
 // GeneratedState holds everything that changes only on Generate click.
-// Text and CTA are tracked separately so previews update live as the user types.
+// Text, CTA, and backgroundSrc are tracked separately so previews update live.
 interface GeneratedState {
-  specs:         AssetSpec[];
-  backgroundSrc: string;
-  projectName:   string;
+  specs:       AssetSpec[];
+  projectName: string;
 }
 
 export default function HomePage() {
   // Live copy state — drives preview immediately as the user types
-  const [text, setText] = useState('');
-  const [cta,  setCta]  = useState('');
+  const [text,             setText]             = useState('');
+  const [subheadline,      setSubheadline]      = useState('');
+  const [cta,              setCta]              = useState('');
+  const [backgroundSrc,    setBackgroundSrc]    = useState(BG_IMAGES[0].src);
+  const [showHeadline,     setShowHeadline]     = useState(true);
+  const [showSubheadline,  setShowSubheadline]  = useState(true);
+  const [showCta,          setShowCta]          = useState(true);
 
   const [generating, setGenerating] = useState(false);
-  const [generated,  setGenerated]  = useState<GeneratedState | null>(null);
+  const [generated,  setGenerated]  = useState<GeneratedState>({
+    specs:       getAllSpecs(),
+    projectName: '',
+  });
 
   const handleGenerate = useCallback(async (form: FormState) => {
     setGenerating(true);
@@ -32,9 +39,8 @@ export default function HomePage() {
     const activeSpecs = allSpecs.filter(s => form.selectedKeys.has(s.key));
 
     setGenerated({
-      specs:         activeSpecs,
-      backgroundSrc: form.backgroundSrc,
-      projectName:   form.projectName,
+      specs:       activeSpecs,
+      projectName: form.projectName,
     });
     setGenerating(false);
 
@@ -44,11 +50,10 @@ export default function HomePage() {
   }, []);
 
   const handleRegenBackground = useCallback(() => {
-    setGenerated(prev => {
-      if (!prev) return prev;
-      const idx  = BG_IMAGES.findIndex(b => b.src === prev.backgroundSrc);
+    setBackgroundSrc(prev => {
+      const idx  = BG_IMAGES.findIndex(b => b.src === prev);
       const next = BG_IMAGES[(idx + 1) % BG_IMAGES.length];
-      return { ...prev, backgroundSrc: next.src };
+      return next.src;
     });
   }, []);
 
@@ -84,7 +89,7 @@ export default function HomePage() {
       <main style={{
         display: 'grid',
         flex: '1',
-        gridTemplateColumns: generated ? '360px 1fr' : '1fr',
+        gridTemplateColumns: '360px 1fr',
         maxWidth: '1400px',
         margin: '0 auto',
         padding: '0',
@@ -92,64 +97,54 @@ export default function HomePage() {
       }}>
         {/* Form panel */}
         <aside style={{
-          borderRight: generated ? '1px solid var(--navy-20)' : 'none',
+          borderRight: '1px solid var(--navy-20)',
           overflowY: 'auto',
           padding: '2.5rem 2rem',
-          position: generated ? 'sticky' : 'static',
+          position: 'sticky',
           top: '0',
           alignSelf: 'start',
-          maxHeight: generated ? '100vh' : 'none',
+          maxHeight: '100vh',
         }}>
-          {!generated && (
-            <div style={{ maxWidth: '480px', margin: '0 auto 2.5rem' }}>
-              <h1 className="font-display" style={{
-                fontSize: 'clamp(2rem, 4vw, 3rem)',
-                fontWeight: 300,
-                letterSpacing: '-0.025em',
-                lineHeight: 1.05,
-                marginBottom: '0.75rem',
-              }}>
-                Performance ads.<br />On brand.
-              </h1>
-              <p style={{ color: 'var(--navy-40)', fontSize: '0.875rem', lineHeight: 1.6 }}>
-                Enter your copy, choose your channels, hit Generate.
-                Preview every size, download a production-ready zip.
-              </p>
-            </div>
-          )}
+          <p style={{
+            color: 'var(--navy-40)', fontSize: '0.7rem', fontWeight: 500,
+            letterSpacing: '0.10em', marginBottom: '1.5rem', textTransform: 'uppercase',
+          }}>Edit</p>
 
-          {generated && (
-            <p style={{
-              color: 'var(--navy-40)', fontSize: '0.7rem', fontWeight: 500,
-              letterSpacing: '0.10em', marginBottom: '1.5rem', textTransform: 'uppercase',
-            }}>Edit</p>
-          )}
-
-          <div style={{ maxWidth: generated ? '100%' : '480px', margin: '0 auto' }}>
-            <AdGeneratorForm
-              text={text}
-              onTextChange={setText}
-              cta={cta}
-              onCtaChange={setCta}
-              onGenerate={handleGenerate}
-              generating={generating}
-            />
-          </div>
+          <AdGeneratorForm
+            text={text}
+            onTextChange={setText}
+            subheadline={subheadline}
+            onSubheadlineChange={setSubheadline}
+            cta={cta}
+            onCtaChange={setCta}
+            backgroundSrc={backgroundSrc}
+            onBackgroundSrcChange={setBackgroundSrc}
+            showHeadline={showHeadline}
+            onShowHeadlineChange={setShowHeadline}
+            showSubheadline={showSubheadline}
+            onShowSubheadlineChange={setShowSubheadline}
+            showCta={showCta}
+            onShowCtaChange={setShowCta}
+            onGenerate={handleGenerate}
+            generating={generating}
+          />
         </aside>
 
         {/* Preview panel */}
-        {generated && (
-          <section id="preview-section" style={{ overflowY: 'auto', padding: '2.5rem' }}>
-            <PreviewGrid
-              specs={generated.specs}
-              text={text}
-              cta={cta}
-              backgroundSrc={generated.backgroundSrc}
-              projectName={generated.projectName}
-              onRegenBackground={handleRegenBackground}
-            />
-          </section>
-        )}
+        <section id="preview-section" style={{ overflowY: 'auto', padding: '2.5rem' }}>
+          <PreviewGrid
+            specs={generated.specs}
+            text={text}
+            subheadline={subheadline}
+            cta={cta}
+            showHeadline={showHeadline}
+            showSubheadline={showSubheadline}
+            showCta={showCta}
+            backgroundSrc={backgroundSrc}
+            projectName={generated.projectName}
+            onRegenBackground={handleRegenBackground}
+          />
+        </section>
       </main>
 
       {/* ── Footer ──────────────────────────────────────────────────────── */}
