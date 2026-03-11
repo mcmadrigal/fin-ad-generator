@@ -89,24 +89,24 @@ interface FormatSpec {
 
 const FORMAT_SPECS: Record<string, FormatSpec> = {
   // TTD
-  '160x600':   { headlinePx: 172.22,ctaPx: 13,   logoH: 16.8,layout: 'vertical',   headLS: -0.03, headLH: 0.95, maxWordsPerLine: 2, padXSpec: 20, layoutStyle: 'poster', textAlign: 'center', ctaMultiLine: true },
-  '728x90':    { headlinePx: 26.91,ctaPx: 10,    logoH: 20,  layout: 'horizontal', headLS: -0.03, headLH: 0.95 },
-  '300x600':   { headlinePx: 233.22,ctaPx: 11.5, logoH: 20.7,layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
-  '320x50':    { headlinePx: 14.95,ctaPx: 6,     logoH: 11,  layout: 'horizontal', headLS: -0.03, headLH: 0.95, autoShrinkHeadline: true, headlineFloorPx: 8 },
-  '300x50':    { headlinePx: 14.95,ctaPx: 6,     logoH: 11,  layout: 'horizontal', headLS: -0.03, headLH: 0.95, autoShrinkHeadline: true, headlineFloorPx: 8 },
-  '768x1024':  { headlinePx: 239.2,ctaPx: 16.9,  logoH: 31.2,layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'center' },
-  '1024x768':  { headlinePx: 239.2,ctaPx: 15.6,  logoH: 30.8,layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'left' },
-  '320x480':   { headlinePx: 149.5,ctaPx: 11,    logoH: 17.6,layout: 'vertical',   headLS: -0.06, headLH: 0.95, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
-  '970x250':   { headlinePx: 37.38,ctaPx: 11,    logoH: 26,  layout: 'horizontal', headLS: -0.03, headLH: 0.95 },
-  '480x320':   { headlinePx: 119.6,ctaPx: 10,    logoH: 18,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
+  '160x600':   { headlinePx: 172.22,ctaPx: 14.3,  logoH: 18.48,layout: 'vertical',   headLS: -0.03, headLH: 0.95, maxWordsPerLine: 2, padXSpec: 20, layoutStyle: 'poster', textAlign: 'center', ctaMultiLine: true },
+  '728x90':    { headlinePx: 26.91,ctaPx: 11,     logoH: 22,   layout: 'horizontal', headLS: -0.03, headLH: 0.95 },
+  '300x600':   { headlinePx: 233.22,ctaPx: 12.65, logoH: 22.77,layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
+  '320x50':    { headlinePx: 14.95,ctaPx: 6.6,    logoH: 12.1, layout: 'horizontal', headLS: -0.03, headLH: 0.95, autoShrinkHeadline: true, headlineFloorPx: 8 },
+  '300x50':    { headlinePx: 14.95,ctaPx: 6.6,    logoH: 12.1, layout: 'horizontal', headLS: -0.03, headLH: 0.95, autoShrinkHeadline: true, headlineFloorPx: 8 },
+  '768x1024':  { headlinePx: 239.2,ctaPx: 18.59,  logoH: 34.32,layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'center' },
+  '1024x768':  { headlinePx: 239.2,ctaPx: 17.16,  logoH: 33.88,layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'left' },
+  '320x480':   { headlinePx: 149.5,ctaPx: 12.1,   logoH: 19.36,layout: 'vertical',   headLS: -0.06, headLH: 0.95, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
+  '970x250':   { headlinePx: 37.38,ctaPx: 12.1,   logoH: 28.6, layout: 'horizontal', headLS: -0.03, headLH: 0.95 },
+  '480x320':   { headlinePx: 119.6,ctaPx: 11,     logoH: 19.8, layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
   // LinkedIn
-  '1080x1080': { headlinePx: 202.4,ctaPx: 20.59, logoH: 51.48,layout: 'vertical',  headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
-  '1200x1200': { headlinePx: 220.8,ctaPx: 17.28, logoH: 44,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
+  '1080x1080': { headlinePx: 202.4,ctaPx: 22.65,  logoH: 56.63,layout: 'vertical',  headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
+  '1200x1200': { headlinePx: 220.8,ctaPx: 19.01,  logoH: 48.4, layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'left' },
   // 6Sense
-  '1200x628':  { headlinePx: 165.6,ctaPx: 13.2,  logoH: 28,  layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'left' },
+  '1200x628':  { headlinePx: 165.6,ctaPx: 14.52,  logoH: 30.8, layout: 'vertical',   headLS: -0.06, headLH: 1.00, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'left' },
   // Meta (1080×1080 shared with LinkedIn above)
-  '1080x1920': { headlinePx: 345,  ctaPx: 26.36, logoH: 60.84,layout: 'vertical',  headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
-  '1920x1080': { headlinePx: 230,  ctaPx: 26.36, logoH: 52,  layout: 'vertical',   headLS: -0.03, headLH: 0.95, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'left' },
+  '1080x1920': { headlinePx: 345,  ctaPx: 29.0,   logoH: 66.92,layout: 'vertical',  headLS: -0.06, headLH: 1.00, maxWordsPerLine: 3, layoutStyle: 'poster', textAlign: 'center' },
+  '1920x1080': { headlinePx: 230,  ctaPx: 29.0,   logoH: 57.2, layout: 'vertical',   headLS: -0.03, headLH: 0.95, maxWordsPerLine: 4, layoutStyle: 'poster', textAlign: 'left' },
 };
 
 function getSpec(W: number, H: number): FormatSpec {
@@ -393,6 +393,8 @@ function renderPosterLayout(
     const wordsPerLine  = spec.maxWordsPerLine ?? 3;
     const floorPx       = Math.max(14, H * 0.02);
 
+    const subPx = ctaPx * 1.82;
+
     let lines: string[] = [];
     // Overflow-reduction loop — re-wraps on each iteration for pixel-based mode
     while (true) {
@@ -403,8 +405,11 @@ function renderPosterLayout(
         : wrapPortraitText(text, wordsPerLine);
       if (lines.length === 0) break;
       if (spec.noAutoShrink) break;
-      const lineH    = headlinePx * headLH;
-      const blockH   = textBlockHeight(lines.length, lineH);
+      const lineH  = headlinePx * headLH;
+      let blockH   = textBlockHeight(lines.length, lineH);
+      if (showSubheadline && subheadline.trim().length > 0) {
+        blockH += subPx * 1.4 + headlinePx * 0.45;
+      }
       const maxLineW = Math.max(...lines.map(l => ctx.measureText(l).width));
       if (blockH <= headlineZoneH && maxLineW <= maxW) break;
       if (headlinePx <= floorPx) break;
@@ -436,11 +441,10 @@ function renderPosterLayout(
 
     // ── Subheadline (optional, below headline block) ────────────────────────
     if (showSubheadline && subheadline.trim().length > 0) {
-      const subPx  = ctaPx * 1.4;
-      const subGap = headlinePx * 0.35;
+      const subGap = headlinePx * 0.45;
       const subY   = textStartY + blockH + subGap;
 
-      ctx.font         = headlineFont(subPx);
+      ctx.font         = ctaFont(subPx);
       ctx.fillStyle    = 'rgba(255,255,255,0.65)';
       ctx.textBaseline = 'top';
       setLetterSpacing(ctx, 0);

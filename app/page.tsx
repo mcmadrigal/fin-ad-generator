@@ -17,9 +17,9 @@ interface GeneratedState {
 
 export default function HomePage() {
   // Live copy state — drives preview immediately as the user types
-  const [text,             setText]             = useState('');
-  const [subheadline,      setSubheadline]      = useState('');
-  const [cta,              setCta]              = useState('');
+  const [text,             setText]             = useState('Resolve 51% of support queries with Fin.');
+  const [subheadline,      setSubheadline]      = useState('The #1 Agent in customer service');
+  const [cta,              setCta]              = useState('See Fin in action');
   const [backgroundSrc,    setBackgroundSrc]    = useState(BG_IMAGES[0].src);
   const [showHeadline,     setShowHeadline]     = useState(true);
   const [showSubheadline,  setShowSubheadline]  = useState(true);
