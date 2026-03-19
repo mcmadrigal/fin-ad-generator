@@ -173,6 +173,7 @@ export function AdModal({ format, state, bgs, onClose, onOverride }: Props) {
           <div style={{ width: dW, height: dH, position: 'relative', overflow: 'hidden' }}>
             <div
               ref={innerRef}
+              data-format-key="modal-render"
               style={{
                 width:           format.w,
                 height:          format.h,

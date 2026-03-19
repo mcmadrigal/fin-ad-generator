@@ -193,7 +193,7 @@ export default function HomePage() {
     if (!state.campaign.trim() || dlProgress !== null) return;
     try {
       setDlProgress({ done: 0, total: 0 });
-      await downloadAll(state, bgs, (done, total) => setDlProgress({ done, total }));
+      await downloadAll(state, (done, total) => setDlProgress({ done, total }));
     } catch (e) {
       alert('Download error: ' + (e as Error).message);
     } finally {
@@ -561,6 +561,7 @@ function AdPreviewCard({
       <div className="ad-frame" style={{ width: dW, height: dH }}>
         <div
           className="ad-inner"
+          data-format-key={key}
           style={{ width: format.w, height: format.h, transform: `scale(${scale})` }}
           dangerouslySetInnerHTML={{ __html: html }}
         />
