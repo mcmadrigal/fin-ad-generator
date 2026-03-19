@@ -235,7 +235,7 @@ export function parseBold(text: string): string {
 // ─── MAIN RENDER FUNCTION ────────────────────────────────────────────────────
 export function renderAd(f: FormatSpec, state: AppState, bgs = BACKGROUNDS): string {
   const W = f.w, H = f.h;
-  const tc = state.textColor === 'light' ? '#FAF9F6' : '#111111';
+  const tc = '#FAF9F6';
   const bg = getBgStyle(bgs, state.bgIdx);
   const isStrip = H <= 100;
   const spec = f.spec || null;

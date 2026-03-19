@@ -1,7 +1,6 @@
 export type Channel = 'TTD' | 'LinkedIn' | '6Sense' | 'Meta';
 
-export type TextColor = 'light' | 'dark';
-export type Align     = 'left' | 'center';
+export type Align = 'left' | 'center';
 
 export interface FormatSpec {
   label:   string;
@@ -39,14 +38,13 @@ export interface Background {
 }
 
 export interface AppState {
-  headline:  string;
-  sub:       string;  // HTML string (may contain <b> tags)
-  cta:       string;
-  bgIdx:     number;
-  textColor: TextColor;
-  align:     Align;
-  showSub:   boolean;
-  selected:  Set<string>;
+  headline: string;
+  sub:      string;  // HTML string (may contain <b> tags)
+  cta:      string;
+  bgIdx:    number;
+  align:    Align;
+  showSub:  boolean;
+  selected: Set<string>;
 }
 
 export interface FormState {

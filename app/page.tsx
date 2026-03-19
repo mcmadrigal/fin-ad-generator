@@ -13,14 +13,13 @@ const MAX_CTA_WORDS = 4;
 
 function makeInitialState(): AppState {
   return {
-    headline:  'Perfect customer experiences are now possible.',
-    sub:       'Fin handles the <b>hard stuff</b> so your team doesn\'t have to.',
-    cta:       'See how it works',
-    bgIdx:     4,
-    textColor: 'light',
-    align:     'center',
-    showSub:   false,
-    selected:  new Set(getAllFormatKeys()),
+    headline: 'Perfect customer experiences are now possible.',
+    sub:      'Fin handles the <b>hard stuff</b> so your team doesn\'t have to.',
+    cta:      'See how it works',
+    bgIdx:    1, // Dark 2
+    align:    'center',
+    showSub:  false,
+    selected: new Set(getAllFormatKeys()),
   };
 }
 
@@ -249,21 +248,6 @@ export default function HomePage() {
               Upload image
               <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleUpload} />
             </label>
-          </div>
-
-          {/* Text Color */}
-          <div className="s-section">
-            <div className="s-title">Text Color</div>
-            <div className="tc-row">
-              <div
-                className={'tc-chip light' + (state.textColor === 'light' ? ' active' : '')}
-                onClick={() => setState(s => ({ ...s, textColor: 'light' }))}
-              >Light</div>
-              <div
-                className={'tc-chip dark' + (state.textColor === 'dark' ? ' active' : '')}
-                onClick={() => setState(s => ({ ...s, textColor: 'dark' }))}
-              >Dark</div>
-            </div>
           </div>
 
           {/* Alignment */}
