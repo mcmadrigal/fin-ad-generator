@@ -3,9 +3,10 @@ export type Channel = 'TTD' | 'LinkedIn' | '6Sense' | 'Meta';
 export type Align = 'left' | 'center';
 
 export interface FormatSpec {
-  label:   string;
-  w:       number;
-  h:       number;
+  label:         string;
+  w:             number;
+  h:             number;
+  _platformKey?: string;  // e.g. "TTD_300×600" — used for per-format copy overrides
   spec: {
     hl?:              number;
     sub?:             number;
@@ -38,13 +39,16 @@ export interface Background {
 }
 
 export interface AppState {
-  headline: string;
-  sub:      string;  // HTML string (may contain <b> tags)
-  cta:      string;
-  bgIdx:    number;
-  align:    Align;
-  showSub:  boolean;
-  selected: Set<string>;
+  headline:        string;
+  sub:             string;  // HTML string (may contain <b> tags)
+  cta:             string;
+  bgIdx:           number;
+  align:           Align;
+  showSub:         boolean;
+  selected:        Set<string>;
+  campaign:        string;
+  overlayOpacity:  number;
+  formatOverrides: Record<string, { hl?: string; cta?: string }>;
 }
 
 export interface FormState {

@@ -1,48 +1,124 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import type { AppState, Background } from '@/types';
 import { PLATFORMS, ALL_CHANNELS, getAllFormatKeys } from '@/lib/platforms';
 import { BACKGROUNDS } from '@/lib/backgrounds';
-import { renderAd, wordCount, sanitizeRichHTML, getRestrictions, LOGO_SVG, calcPreviewScale } from '@/lib/renderAd';
+import { renderAd, sanitizeRichHTML, getRestrictions, LOGO_SVG, calcPreviewScale } from '@/lib/renderAd';
 import { AdModal } from '@/components/AdModal';
+import { downloadAll } from '@/lib/downloadAll';
 import type { FormatSpec } from '@/types';
 
-const MAX_WORDS     = 10;
+const MAX_CHARS     = 60;
 const MAX_CTA_WORDS = 4;
 
+// ─── WCAG 7:1 CONTRAST HELPERS ────────────────────────────────────────────────
+function srgbToLinear(c: number): number {
+  const s = c / 255;
+  return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+}
+function getLuminance(r: number, g: number, b: number): number {
+  return 0.2126 * srgbToLinear(r) + 0.7152 * srgbToLinear(g) + 0.0722 * srgbToLinear(b);
+}
+// Luminance of text colour #FAF9F6
+const TEXT_LUM = getLuminance(250, 249, 246);
+// Min bg luminance for 7:1 contrast against TEXT_LUM
+const TARGET_BG_LUM = (TEXT_LUM + 0.05) / 7 - 0.05;
+
+function calcMinOpacity(avgR: number, avgG: number, avgB: number): number {
+  const bgLum = getLuminance(avgR, avgG, avgB);
+  if (bgLum <= TARGET_BG_LUM) return 0;
+  // Binary-search minimum black overlay opacity so darkened bg meets contrast
+  let lo = 0, hi = 1;
+  for (let i = 0; i < 24; i++) {
+    const mid = (lo + hi) / 2;
+    const f = 1 - mid;
+    const lum = getLuminance(avgR * f, avgG * f, avgB * f);
+    if (lum <= TARGET_BG_LUM) hi = mid; else lo = mid;
+  }
+  return Math.ceil(hi * 100); // return as integer percentage, rounded up
+}
+
+async function sampleBgMinOpacity(bg: Background): Promise<number> {
+  if (bg.v.startsWith('solid:')) {
+    const hex = bg.v.replace('solid:', '').replace('#', '');
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+    return calcMinOpacity(r, g, b);
+  }
+  return new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 64; canvas.height = 64;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0, 64, 64);
+      const data = ctx.getImageData(0, 0, 64, 64).data;
+      let r = 0, g = 0, b = 0;
+      const n = data.length / 4;
+      for (let i = 0; i < data.length; i += 4) {
+        r += data[i]; g += data[i + 1]; b += data[i + 2];
+      }
+      resolve(calcMinOpacity(r / n, g / n, b / n));
+    };
+    img.onerror = () => resolve(0);
+    img.src = bg.v;
+  });
+}
+
+// ─── INITIAL STATE ────────────────────────────────────────────────────────────
 function makeInitialState(): AppState {
   return {
     headline: 'Perfect customer experiences are now possible.',
     sub:      'Fin handles the <b>hard stuff</b> so your team doesn\'t have to.',
     cta:      'See how it works',
-    bgIdx:    1, // Dark 2
-    align:    'center',
-    showSub:  false,
-    selected: new Set(getAllFormatKeys()),
+    bgIdx:           1, // Dark 2
+    align:           'center',
+    showSub:         false,
+    selected:        new Set(getAllFormatKeys()),
+    campaign:        '',
+    overlayOpacity:  0,
+    formatOverrides: {},
   };
 }
 
+// ─── PAGE ─────────────────────────────────────────────────────────────────────
 export default function HomePage() {
-  const [state, setState]       = useState<AppState>(makeInitialState);
-  const [customBg, setCustomBg] = useState<Background | null>(null);
-  const [modal, setModal]       = useState<FormatSpec | null>(null);
+  const [state, setState]         = useState<AppState>(makeInitialState);
+  const [customBg, setCustomBg]   = useState<Background | null>(null);
+  const [modal, setModal]         = useState<FormatSpec | null>(null);
+  const [renderKey, setRenderKey] = useState(0);
+  const [minOverlay, setMinOverlay] = useState(0);
+  const [dlProgress, setDlProgress] = useState<{ done: number; total: number } | null>(null);
 
   const subRef = useRef<HTMLDivElement>(null);
 
   // Resolved background list (with optional custom upload appended)
   const bgs: Background[] = customBg ? [...BACKGROUNDS, customBg] : BACKGROUNDS;
 
-  // Init contenteditable
+  // ── FONT READINESS: re-render all preview cards once fonts load ────────────
+  useEffect(() => {
+    document.fonts.ready.then(() => setRenderKey(k => k + 1));
+  }, []);
+
+  // Init contenteditable sub field
   useEffect(() => {
     if (subRef.current) subRef.current.innerHTML = state.sub;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── COPY HANDLERS ───────────────────────────────────────────────────────────
+  // ── WCAG MIN OVERLAY: recalculate when bg changes ─────────────────────────
+  useEffect(() => {
+    const bg = bgs[state.bgIdx] || bgs[0];
+    sampleBgMinOpacity(bg).then(setMinOverlay);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.bgIdx, bgs.length]);
+
+  // ── COPY HANDLERS ─────────────────────────────────────────────────────────
   function setHl(raw: string) {
-    const words = raw.trim() === '' ? [] : raw.trim().split(/\s+/);
-    const clamped = words.length > MAX_WORDS ? words.slice(0, MAX_WORDS).join(' ') : raw;
+    const clamped = raw.slice(0, MAX_CHARS);
     setState(s => ({ ...s, headline: clamped }));
     return clamped;
   }
@@ -66,7 +142,7 @@ export default function HomePage() {
     return clamped;
   }
 
-  // ── BG / UPLOAD ─────────────────────────────────────────────────────────────
+  // ── BG / UPLOAD ───────────────────────────────────────────────────────────
   function setBgIdx(i: number) {
     setState(s => ({ ...s, bgIdx: i }));
   }
@@ -79,12 +155,12 @@ export default function HomePage() {
       const dataUrl = ev.target?.result as string;
       const custom: Background = { label: 'Custom', v: dataUrl };
       setCustomBg(custom);
-      setState(s => ({ ...s, bgIdx: BACKGROUNDS.length })); // last slot
+      setState(s => ({ ...s, bgIdx: BACKGROUNDS.length }));
     };
     reader.readAsDataURL(file);
   }
 
-  // ── FORMATS ─────────────────────────────────────────────────────────────────
+  // ── FORMATS ───────────────────────────────────────────────────────────────
   function toggleFormat(key: string) {
     setState(s => {
       const next = new Set(s.selected);
@@ -98,33 +174,95 @@ export default function HomePage() {
     setState(s => ({ ...s, selected: on ? new Set(keys) : new Set() }));
   }
 
-  // ── RESTRICTIONS ────────────────────────────────────────────────────────────
+  // ── FORMAT OVERRIDES ──────────────────────────────────────────────────────
+  const handleOverride = useCallback((key: string, field: 'hl' | 'cta', value: string) => {
+    setState(s => ({
+      ...s,
+      formatOverrides: {
+        ...s.formatOverrides,
+        [key]: {
+          ...s.formatOverrides[key],
+          [field]: value || undefined,
+        },
+      },
+    }));
+  }, []);
+
+  // ── DOWNLOAD ALL ──────────────────────────────────────────────────────────
+  async function handleDownloadAll() {
+    if (!state.campaign.trim() || dlProgress !== null) return;
+    try {
+      setDlProgress({ done: 0, total: 0 });
+      await downloadAll(state, bgs, (done, total) => setDlProgress({ done, total }));
+    } catch (e) {
+      alert('Download error: ' + (e as Error).message);
+    } finally {
+      setDlProgress(null);
+    }
+  }
+
+  // ── RESTRICTIONS (shown in sidebar when modal is open) ────────────────────
   const restrictions = modal ? getRestrictions(modal) : [];
 
-  // ── WORD COUNTS ─────────────────────────────────────────────────────────────
-  const hlWords  = wordCount(state.headline);
-  const subWords = wordCount(state.sub.replace(/<[^>]+>/g, ' '));
-  const ctaWords = wordCount(state.cta);
+  // ── CHAR / WORD COUNTS ────────────────────────────────────────────────────
+  const hlChars  = state.headline.length;
+  const subChars = state.sub.replace(/<[^>]+>/g, '').length;
+  const ctaWords = state.cta.trim() === '' ? 0 : state.cta.trim().split(/\s+/).length;
+
+  const isDownloading = dlProgress !== null;
+  const canDownload   = !!state.campaign.trim() && !isDownloading;
+  const dlLabel = isDownloading
+    ? (dlProgress!.total > 0
+        ? `Exporting ${dlProgress!.done} / ${dlProgress!.total}…`
+        : 'Preparing…')
+    : '↓ Download All';
 
   return (
     <div className="app">
 
-      {/* ── HEADER ──────────────────────────────────────────────────────────── */}
+      {/* ── HEADER ──────────────────────────────────────────────────────── */}
       <div className="hdr">
         <div className="hdr-logo" dangerouslySetInnerHTML={{ __html: LOGO_SVG }} />
-        <span className="hdr-sep">Ad Generator</span>
-        <div style={{ flex: 1 }} />
-        <button className="export-btn" onClick={() => {
-          if (!modal) alert('Click any format to preview it, then use the Download button.');
-        }}>
-          ↓ Export PNG
-        </button>
+        <span className="hdr-sep">Performance Marketing Ad Generator</span>
       </div>
 
       <div className="main-layout">
 
-        {/* ── SIDEBAR ───────────────────────────────────────────────────────── */}
+        {/* ── SIDEBAR ─────────────────────────────────────────────────────── */}
         <div className="sidebar">
+
+          {/* Campaign title — mandatory, unlocks Download All */}
+          <div className="s-section" style={{ paddingBottom: 0 }}>
+            <input
+              className="inp"
+              type="text"
+              placeholder="Campaign title"
+              value={state.campaign}
+              onChange={e => setState(s => ({ ...s, campaign: e.target.value }))}
+              style={{ marginBottom: 10 }}
+            />
+            <button
+              onClick={handleDownloadAll}
+              disabled={!canDownload}
+              style={{
+                width:         '100%',
+                fontFamily:    "'SaansMono',monospace",
+                fontSize:      10,
+                letterSpacing: '.08em',
+                textTransform: 'uppercase',
+                padding:       '9px 4px',
+                borderRadius:  2,
+                border:        'none',
+                background:    canDownload ? '#111' : 'rgba(0,0,0,0.12)',
+                color:         canDownload ? '#fff' : 'rgba(0,0,0,0.3)',
+                cursor:        canDownload ? 'pointer' : 'not-allowed',
+                marginBottom:  16,
+                transition:    'background .15s, color .15s',
+              }}
+            >
+              {dlLabel}
+            </button>
+          </div>
 
           {/* Copy */}
           <div className="s-section">
@@ -134,7 +272,7 @@ export default function HomePage() {
             <div className="inp-group">
               <div className="s-row">
                 <span className="inp-lbl">Headline</span>
-                <span className={'s-count' + (hlWords >= MAX_WORDS - 2 ? ' warn' : '')}>{hlWords} / {MAX_WORDS}</span>
+                <span className={'s-count' + (hlChars >= MAX_CHARS - 5 ? ' warn' : '')}>{hlChars} / {MAX_CHARS} chars</span>
               </div>
               <textarea
                 className="inp"
@@ -142,18 +280,19 @@ export default function HomePage() {
                 placeholder="Perfect customer experiences are now possible."
                 value={state.headline}
                 onChange={e => {
-                  const clamped = setHl(e.target.value);
+                  const clamped = e.target.value.slice(0, MAX_CHARS);
+                  setState(s => ({ ...s, headline: clamped }));
                   if (clamped !== e.target.value) e.target.value = clamped;
                 }}
               />
-              {hlWords >= MAX_WORDS && <div className="inp-warn" style={{ display: 'block' }}>{MAX_WORDS} word maximum</div>}
+              {hlChars >= MAX_CHARS && <div className="inp-warn" style={{ display: 'block' }}>{MAX_CHARS} character maximum</div>}
             </div>
 
             {/* Subheadline */}
             <div className="inp-group">
               <div className="s-row">
                 <span className="inp-lbl">Subheadline</span>
-                <span className={'s-count' + (subWords >= MAX_WORDS - 2 ? ' warn' : '')}>{subWords} / {MAX_WORDS}</span>
+                <span className={'s-count' + (subChars >= MAX_CHARS - 5 ? ' warn' : '')}>{subChars} / {MAX_CHARS} chars</span>
               </div>
               <div
                 ref={subRef}
@@ -164,7 +303,7 @@ export default function HomePage() {
                 data-field="sub"
                 onInput={syncSub}
               />
-              {subWords >= MAX_WORDS && <div className="inp-warn" style={{ display: 'block' }}>{MAX_WORDS} word maximum</div>}
+              {subChars >= MAX_CHARS && <div className="inp-warn" style={{ display: 'block' }}>{MAX_CHARS} character maximum</div>}
               <div className="bold-toolbar" style={{ marginTop: 6 }}>
                 <button
                   className="bold-btn"
@@ -187,14 +326,14 @@ export default function HomePage() {
                   position: 'absolute', inset: 0, borderRadius: 8,
                   background: state.showSub ? '#FF5600' : 'rgba(0,0,0,0.15)',
                   transition: 'background .15s',
-                }} id="sub-track" />
+                }} />
                 <div style={{
                   position: 'absolute', top: 2, left: 2, width: 12, height: 12,
                   borderRadius: '50%', background: '#fff',
                   transition: 'transform .15s',
                   transform: state.showSub ? 'translateX(14px)' : 'translateX(0)',
                   boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                }} id="sub-thumb" />
+                }} />
               </div>
             </div>
 
@@ -202,7 +341,7 @@ export default function HomePage() {
             <div className="inp-group">
               <div className="s-row">
                 <span className="inp-lbl">CTA</span>
-                <span className={'s-count' + (ctaWords >= MAX_CTA_WORDS ? ' warn' : '')}>{ctaWords} / {MAX_CTA_WORDS}</span>
+                <span className={'s-count' + (ctaWords >= MAX_CTA_WORDS ? ' warn' : '')}>{ctaWords} / {MAX_CTA_WORDS} words</span>
               </div>
               <input
                 className="inp"
@@ -248,6 +387,29 @@ export default function HomePage() {
               Upload image
               <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleUpload} />
             </label>
+
+            {/* Darkness overlay slider */}
+            <div style={{ marginTop: 14 }}>
+              <div className="s-row" style={{ marginBottom: 6 }}>
+                <span className="inp-lbl">Darkness overlay</span>
+                <span className={'s-count' + (state.overlayOpacity < minOverlay && minOverlay > 0 ? ' warn' : '')}>
+                  {state.overlayOpacity}%
+                </span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={state.overlayOpacity}
+                onChange={e => setState(s => ({ ...s, overlayOpacity: Number(e.target.value) }))}
+                style={{ width: '100%', accentColor: '#FF5600', cursor: 'pointer' }}
+              />
+              {state.overlayOpacity < minOverlay && minOverlay > 0 && (
+                <div className="inp-warn" style={{ display: 'block', marginTop: 4 }}>
+                  ⚠ Needs {minOverlay}%+ for WCAG AAA (7:1) contrast
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Alignment */}
@@ -310,7 +472,7 @@ export default function HomePage() {
                   <div className="fmt-group-lbl">{platform}</div>
                   <div className="fmt-checks">
                     {PLATFORMS[platform].map(f => {
-                      const key = platform + '_' + f.label;
+                      const key = f._platformKey || platform + '_' + f.label;
                       const checked = state.selected.has(key);
                       return (
                         <label key={key} className={'fmt-check' + (checked ? ' checked' : '')}>
@@ -331,7 +493,10 @@ export default function HomePage() {
         {/* ── PREVIEW GRID ────────────────────────────────────────────────── */}
         <div id="all-grid">
           {ALL_CHANNELS.map(platform => {
-            const active = PLATFORMS[platform].filter(f => state.selected.has(platform + '_' + f.label));
+            const active = PLATFORMS[platform].filter(f => {
+              const key = f._platformKey || platform + '_' + f.label;
+              return state.selected.has(key);
+            });
             if (!active.length) return null;
             return (
               <div key={platform} className="fmt-platform-block">
@@ -339,7 +504,7 @@ export default function HomePage() {
                 <div className="fmt-row">
                   {active.map(f => (
                     <AdPreviewCard
-                      key={platform + '_' + f.label}
+                      key={(f._platformKey || platform + '_' + f.label) + '_' + renderKey}
                       format={f}
                       state={state}
                       bgs={bgs}
@@ -361,6 +526,7 @@ export default function HomePage() {
           state={state}
           bgs={bgs}
           onClose={() => setModal(null)}
+          onOverride={handleOverride}
         />
       )}
 
@@ -372,15 +538,23 @@ export default function HomePage() {
 function AdPreviewCard({
   format, state, bgs, onClick,
 }: {
-  format: FormatSpec;
-  state:  AppState;
-  bgs:    Background[];
+  format:  FormatSpec;
+  state:   AppState;
+  bgs:     Background[];
   onClick: () => void;
 }) {
+  const key          = format._platformKey || '';
+  const overrideData = key ? (state.formatOverrides[key] || {}) : {};
+  const effectiveState: AppState = {
+    ...state,
+    headline: overrideData.hl || state.headline,
+    cta:      overrideData.cta || state.cta,
+  };
+
   const scale = calcPreviewScale(format.w, format.h);
   const dW    = Math.round(format.w * scale);
   const dH    = Math.round(format.h * scale);
-  const html  = renderAd(format, state, bgs);
+  const html  = renderAd(format, effectiveState, bgs);
 
   return (
     <div className="ad-preview-wrap" title="Click to preview" onClick={onClick}>

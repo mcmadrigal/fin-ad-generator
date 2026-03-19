@@ -237,6 +237,10 @@ export function renderAd(f: FormatSpec, state: AppState, bgs = BACKGROUNDS): str
   const W = f.w, H = f.h;
   const tc = '#FAF9F6';
   const bg = getBgStyle(bgs, state.bgIdx);
+  const overlayOpacity = (state.overlayOpacity || 0) / 100;
+  const overlayHtml = overlayOpacity > 0
+    ? `<div style="position:absolute;inset:0;background:rgba(0,0,0,${overlayOpacity.toFixed(3)});z-index:1;pointer-events:none;"></div>`
+    : '';
   const isStrip = H <= 100;
   const spec = f.spec || null;
   const ta = state.align;
@@ -299,8 +303,8 @@ export function renderAd(f: FormatSpec, state: AppState, bgs = BACKGROUNDS): str
     const ctaRaw = (state.cta || '').toUpperCase();
     const stripCtaHTML = `<div style="white-space:nowrap;">${ctaRaw}</div>`;
 
-    return `<div style="position:absolute;inset:0;${bg}"></div>
-<div style="position:absolute;inset:0;display:flex;align-items:center;padding:0 ${padX}px;gap:${Math.round(padX * 0.6)}px;">
+    return `<div style="position:absolute;inset:0;${bg}"></div>${overlayHtml}
+<div style="position:absolute;inset:0;z-index:2;display:flex;align-items:center;padding:0 ${padX}px;gap:${Math.round(padX * 0.6)}px;">
   <div style="flex-shrink:0;width:${logoW}px;height:${logoH}px;color:${tc};">${LOGO_SVG}</div>
   <div style="flex:1;min-width:0;font-family:'Saans',sans-serif;font-size:${hlSz}px;line-height:${hlLineH}px;color:${tc};overflow:hidden;text-align:${stripAlign};">${hlHTML}</div>
   ${showStripCta ? `<div style="flex-shrink:0;font-family:'SaansMono',monospace;font-size:${ctaSz}px;letter-spacing:0.05em;text-decoration:underline;text-underline-offset:2px;color:${tc};">${stripCtaHTML}</div>` : ''}
@@ -461,8 +465,8 @@ export function renderAd(f: FormatSpec, state: AppState, bgs = BACKGROUNDS): str
     const logoCapNudge = capNudge;
     const cornersHlHTML = cornersHlLines.map(l => `<div style="overflow-wrap:break-word;">${parseBold(l)}</div>`).join('');
 
-    return `<div style="position:absolute;inset:0;${bg}"></div>
-<div style="position:absolute;inset:0;overflow:hidden;">
+    return `<div style="position:absolute;inset:0;${bg}"></div>${overlayHtml}
+<div style="position:absolute;inset:0;z-index:2;overflow:hidden;">
   <div style="position:absolute;top:${padY}px;left:${padX}px;max-width:${availW * 0.6}px;margin-top:${capNudge.toFixed(1)}px;">
     <div style="font-family:'Saans',sans-serif;font-size:${hlSz}px;line-height:1.1;color:${tc};">${cornersHlHTML}</div>
   </div>
@@ -477,8 +481,8 @@ export function renderAd(f: FormatSpec, state: AppState, bgs = BACKGROUNDS): str
 
   // ── CENTER TEXT LAYOUT ─────────────────────────────────────────────────────
   if (spec && spec.centerText) {
-    return `<div style="position:absolute;inset:0;${bg}"></div>
-<div style="position:absolute;inset:0;display:flex;flex-direction:column;${itemsAlign}padding:${padY}px ${padX}px;overflow:hidden;">
+    return `<div style="position:absolute;inset:0;${bg}"></div>${overlayHtml}
+<div style="position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;${itemsAlign}padding:${padY}px ${padX}px;overflow:hidden;">
   <div style="flex-shrink:0;width:${logoW}px;height:${logoH}px;color:${tc};">${LOGO_SVG}</div>
   <div style="flex:1;display:flex;flex-direction:column;${itemsAlign}justify-content:center;width:100%;min-height:0;overflow:hidden;">
     <div style="font-family:'Saans',sans-serif;font-size:${hlSz}px;line-height:1.1;color:${tc};margin-bottom:${hlSubGap}px;width:100%;max-width:${availW}px;">${hlHTML}</div>
@@ -491,8 +495,8 @@ export function renderAd(f: FormatSpec, state: AppState, bgs = BACKGROUNDS): str
   }
 
   // ── DEFAULT LAYOUT ─────────────────────────────────────────────────────────
-  return `<div style="position:absolute;inset:0;${bg}"></div>
-<div style="position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;">
+  return `<div style="position:absolute;inset:0;${bg}"></div>${overlayHtml}
+<div style="position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;overflow:hidden;">
   <div style="padding:${padY}px ${padX}px;flex-shrink:0;">
     <div style="width:${logoW}px;height:${logoH}px;color:${tc};">${LOGO_SVG}</div>
   </div>
