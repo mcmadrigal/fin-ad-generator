@@ -7,8 +7,8 @@ export async function downloadAll(
   state: AppState,
   onProgress?: ProgressFn,
 ): Promise<void> {
-  const [{ default: html2canvas }, { default: JSZip }] = await Promise.all([
-    import('html2canvas'),
+  const [{ captureElement }, { default: JSZip }] = await Promise.all([
+    import('./captureElement'),
     import('jszip'),
   ]);
 
@@ -38,21 +38,7 @@ export async function downloadAll(
     const el = document.querySelector(`[data-format-key="${key}"]`) as HTMLElement | null;
     if (!el) throw new Error(`Ad element not found for "${key}". Make sure the format is selected and visible in the grid.`);
 
-    const canvas = await html2canvas(el, {
-      scale:           1,
-      useCORS:         true,
-      allowTaint:      true,
-      backgroundColor: null,
-      width:           w,
-      height:          h,
-      windowWidth:     w,
-      windowHeight:    h,
-      logging:         false,
-    });
-
-    const blob = await new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob(b => (b ? resolve(b) : reject(new Error('toBlob failed'))), 'image/png');
-    });
+    const blob = await captureElement(el, w, h);
 
     const fileName = `${campaign}_${platform}_${label}.png`;
     zip.folder(folderName)!.file(fileName, blob);

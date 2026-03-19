@@ -51,21 +51,15 @@ export function AdModal({ format, state, bgs, onClose, onOverride }: Props) {
   async function downloadPng() {
     const el = innerRef.current;
     if (!el) return;
-    const { default: html2canvas } = await import('html2canvas');
+    const { captureElement } = await import('@/lib/captureElement');
     try {
-      const result = await html2canvas(el, {
-        scale:           1,
-        useCORS:         true,
-        allowTaint:      true,
-        backgroundColor: null,
-        width:           format.w,
-        height:          format.h,
-        logging:         false,
-      });
-      const a = document.createElement('a');
+      const blob = await captureElement(el, format.w, format.h);
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
       a.download = `${state.campaign || 'fin-ad'}_${format.label}.png`;
-      a.href = result.toDataURL('image/png');
+      a.href     = url;
       a.click();
+      URL.revokeObjectURL(url);
     } catch (e) {
       alert('Export error: ' + (e as Error).message);
     }
