@@ -36,9 +36,9 @@ async function buildEmbedCSS(): Promise<string> {
 
 // Replace url('/...') references inside an HTML string with embedded data URLs
 async function inlineImages(html: string): Promise<string> {
-  const paths = [...new Set(
-    [...html.matchAll(/url\(['"]?(\/[^'")]+)['"]?\)/g)].map(m => m[1]),
-  )];
+  const paths = Array.from(new Set(
+    Array.from(html.matchAll(/url\(['"]?(\/[^'")]+)['"]?\)/g)).map(m => m[1]),
+  ));
 
   await Promise.allSettled(paths.map(p => toDataURL(p)));
 
