@@ -14,7 +14,8 @@ export async function downloadAll(
     import('jszip'),
   ]);
 
-  const campaign = state.campaign.trim();
+  // Spaces → underscores in campaign name for safe filenames
+  const campaign = state.campaign.trim().replace(/\s+/g, '_');
   const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
   const folderName = `${campaign}_${date}`;
   const zip = new JSZip();
@@ -31,33 +32,33 @@ export async function downloadAll(
   }
 
   onProgress?.(0, selected.length);
+  await document.fonts.ready;
 
-  // Offscreen container — pinned off-viewport
-  const container = document.createElement('div');
-  container.style.cssText = 'position:fixed;top:-200000px;left:-200000px;pointer-events:none;opacity:0;';
-  document.body.appendChild(container);
+  for (let i = 0; i < selected.length; i++) {
+    const { platform, label, w, h, key } = selected[i];
+    const format = PLATFORMS[platform as keyof typeof PLATFORMS].find(f => f.label === label)!;
 
-  try {
-    await document.fonts.ready;
+    // Apply per-format overrides
+    const overrideData = state.formatOverrides[key] || {};
+    const effectiveState: AppState = {
+      ...state,
+      headline: overrideData.hl || state.headline,
+      cta:      overrideData.cta || state.cta,
+    };
 
-    for (let i = 0; i < selected.length; i++) {
-      const { platform, label, w, h, key } = selected[i];
-      const format = PLATFORMS[platform as keyof typeof PLATFORMS].find(f => f.label === label)!;
+    const html = renderAd(format, effectiveState, bgs);
 
-      // Apply per-format overrides
-      const overrideData = state.formatOverrides[key] || {};
-      const effectiveState: AppState = {
-        ...state,
-        headline: overrideData.hl || state.headline,
-        cta:      overrideData.cta || state.cta,
-      };
+    // Each element is appended directly to body, positioned just off the left
+    // edge of the viewport — visible to html2canvas but not to the user
+    const el = document.createElement('div');
+    el.style.cssText = `position:fixed;top:0;left:-${w + 100}px;width:${w}px;height:${h}px;overflow:hidden;pointer-events:none;`;
+    el.innerHTML = html;
+    document.body.appendChild(el);
 
-      const html = renderAd(format, effectiveState, bgs);
-
-      const el = document.createElement('div');
-      el.style.cssText = `width:${w}px;height:${h}px;position:relative;overflow:hidden;`;
-      el.innerHTML = html;
-      container.appendChild(el);
+    try {
+      // Re-await fonts and allow 200 ms for images/paint to settle
+      await document.fonts.ready;
+      await new Promise(r => setTimeout(r, 200));
 
       const canvas = await html2canvas(el, {
         scale:           1,
@@ -75,18 +76,17 @@ export async function downloadAll(
 
       const fileName = `${campaign}_${platform}_${label}.png`;
       zip.folder(folderName)!.file(fileName, blob);
-
-      container.removeChild(el);
-      onProgress?.(i + 1, selected.length);
+    } finally {
+      document.body.removeChild(el);
     }
 
-    const content = await zip.generateAsync({ type: 'blob' });
-    const a = document.createElement('a');
-    a.download = `${folderName}.zip`;
-    a.href = URL.createObjectURL(content);
-    a.click();
-    URL.revokeObjectURL(a.href);
-  } finally {
-    document.body.removeChild(container);
+    onProgress?.(i + 1, selected.length);
   }
+
+  const content = await zip.generateAsync({ type: 'blob' });
+  const a = document.createElement('a');
+  a.download = `${folderName}.zip`;
+  a.href = URL.createObjectURL(content);
+  a.click();
+  URL.revokeObjectURL(a.href);
 }

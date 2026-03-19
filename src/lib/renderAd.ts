@@ -299,15 +299,15 @@ export function renderAd(f: FormatSpec, state: AppState, bgs = BACKGROUNDS): str
       hlLines = [words.slice(0, mid).join(' '), words.slice(mid).join(' ')].filter(Boolean);
     }
     const hlLineH = hlSz * 1.1;
-    const hlHTML = hlLines.map(l => `<div style="overflow:hidden;">${l}</div>`).join('');
+    const hlHTML = hlLines.map(l => `<div style="overflow:hidden;white-space:nowrap;">${l}</div>`).join('');
     const ctaRaw = (state.cta || '').toUpperCase();
-    const stripCtaHTML = `<div style="white-space:nowrap;">${ctaRaw}</div>`;
+    const stripCtaHTML = `<div style="white-space:nowrap;"><span style="border-bottom:1px solid ${tc};padding-bottom:2px;">${ctaRaw}</span></div>`;
 
     return `<div style="position:absolute;inset:0;${bg}"></div>${overlayHtml}
 <div style="position:absolute;inset:0;z-index:2;display:flex;align-items:center;padding:0 ${padX}px;gap:${Math.round(padX * 0.6)}px;">
   <div style="flex-shrink:0;width:${logoW}px;height:${logoH}px;color:${tc};">${LOGO_SVG}</div>
-  <div style="flex:1;min-width:0;font-family:'Saans',sans-serif;font-size:${hlSz}px;line-height:${hlLineH}px;color:${tc};overflow:hidden;text-align:${stripAlign};">${hlHTML}</div>
-  ${showStripCta ? `<div style="flex-shrink:0;font-family:'SaansMono',monospace;font-size:${ctaSz}px;letter-spacing:0.05em;text-decoration:underline;text-underline-offset:2px;color:${tc};">${stripCtaHTML}</div>` : ''}
+  <div style="flex:1;min-width:0;font-family:'Saans',sans-serif;font-size:${hlSz}px;line-height:${hlLineH}px;color:${tc};overflow:hidden;white-space:nowrap;text-align:${stripAlign};">${hlHTML}</div>
+  ${showStripCta ? `<div style="flex-shrink:0;font-family:'SaansMono',monospace;font-size:${ctaSz}px;letter-spacing:0.05em;color:${tc};">${stripCtaHTML}</div>` : ''}
 </div>`;
   }
 
@@ -415,7 +415,7 @@ export function renderAd(f: FormatSpec, state: AppState, bgs = BACKGROUNDS): str
   const ctaAlignOverride = (spec && spec.ctaAlign) ? spec.ctaAlign : ta;
   const ctaAlignStyle = 'text-align:' + ctaAlignOverride + ';';
   const ctaHTML = ctaLines.map((l, i) =>
-    `<div style="white-space:nowrap;${ctaAlignStyle}${i < ctaLines.length - 1 && ctaLineGap ? 'margin-bottom:' + ctaLineGap + 'px;' : ''}">${l}</div>`,
+    `<div style="white-space:nowrap;${ctaAlignStyle}${i < ctaLines.length - 1 && ctaLineGap ? 'margin-bottom:' + ctaLineGap + 'px;' : ''}"><span style="border-bottom:1px solid ${tc};padding-bottom:2px;">${l}</span></div>`,
   ).join('');
   const hlHTML   = hlLines.map(l => `<div style="white-space:nowrap;${alignStyle}">${l}</div>`).join('');
   const subHTML  = subLines2.map(l => `<div style="overflow-wrap:break-word;word-break:break-word;${alignStyle}">${parseBold(l)}</div>`).join('');
@@ -457,7 +457,7 @@ export function renderAd(f: FormatSpec, state: AppState, bgs = BACKGROUNDS): str
     const ctaLines2 = (spec && spec.ctaBreak) ? breakCtaLines(cornersCtaRaw, spec.ctaBreak) : [cornersCtaRaw];
     const ctaLineGap2 = (spec && spec.ctaLineGap) ? spec.ctaLineGap : 0;
     const ctaHTML2 = ctaLines2.map((l, i) =>
-      `<div style="white-space:nowrap;${i < ctaLines2.length - 1 && ctaLineGap2 ? 'margin-bottom:' + ctaLineGap2 + 'px;' : ''}">${l}</div>`,
+      `<div style="white-space:nowrap;${i < ctaLines2.length - 1 && ctaLineGap2 ? 'margin-bottom:' + ctaLineGap2 + 'px;' : ''}"><span style="border-bottom:1px solid ${tc};padding-bottom:2px;">${l}</span></div>`,
     ).join('');
     const capRatio = 0.71;
     const hlLeading = (hlSz * 1.1 - hlSz) / 2;
@@ -473,7 +473,7 @@ export function renderAd(f: FormatSpec, state: AppState, bgs = BACKGROUNDS): str
   <div style="position:absolute;top:${padY}px;right:${padX}px;width:${logoW}px;height:${logoH}px;color:${tc};margin-top:${logoCapNudge.toFixed(1)}px;">
     ${LOGO_SVG}
   </div>
-  <div style="position:absolute;bottom:${padY}px;left:${padX}px;font-family:'SaansMono',monospace;font-size:${ctaSz}px;letter-spacing:0.05em;text-decoration:underline;text-underline-offset:3px;text-transform:uppercase;color:${tc};">
+  <div style="position:absolute;bottom:${padY}px;left:${padX}px;font-family:'SaansMono',monospace;font-size:${ctaSz}px;letter-spacing:0.05em;text-transform:uppercase;color:${tc};">
     ${ctaHTML2}
   </div>
 </div>`;
@@ -489,7 +489,7 @@ export function renderAd(f: FormatSpec, state: AppState, bgs = BACKGROUNDS): str
     ${showSub && state.sub ? `<div style="font-family:'Saans',sans-serif;font-size:${subSz}px;line-height:1.2;color:${tc};opacity:0.78;width:100%;max-width:${availW}px;">${subHTML}</div>` : ''}
   </div>
   <div style="flex-shrink:0;width:100%;max-width:${availW}px;">
-    <div style="font-family:'SaansMono',monospace;font-size:${ctaSz}px;letter-spacing:0.05em;text-decoration:underline;text-underline-offset:3px;text-transform:uppercase;color:${tc};line-height:${1.2 + (ctaLineGap / ctaSz).toFixed(3)};">${ctaHTML}</div>
+    <div style="font-family:'SaansMono',monospace;font-size:${ctaSz}px;letter-spacing:0.05em;text-transform:uppercase;color:${tc};line-height:${1.2 + (ctaLineGap / ctaSz).toFixed(3)};">${ctaHTML}</div>
   </div>
 </div>`;
   }
@@ -503,7 +503,7 @@ export function renderAd(f: FormatSpec, state: AppState, bgs = BACKGROUNDS): str
   <div style="flex:1;padding:0 ${padX}px;display:flex;flex-direction:column;${itemsAlign}justify-content:flex-end;padding-bottom:${padY}px;width:100%;min-height:0;overflow:hidden;">
     <div style="font-family:'Saans',sans-serif;font-size:${hlSz}px;line-height:1.1;color:${tc};margin-bottom:${hlSubGap}px;width:100%;max-width:${availW}px;">${hlHTML}</div>
     ${showSub && state.sub ? `<div style="font-family:'Saans',sans-serif;font-size:${subSz}px;line-height:1.2;color:${tc};opacity:0.78;margin-bottom:${subCtaGap}px;width:100%;max-width:${availW}px;">${subHTML}</div>` : `<div style="margin-bottom:${subCtaGap}px;"></div>`}
-    <div style="font-family:'SaansMono',monospace;font-size:${ctaSz}px;letter-spacing:0.05em;text-decoration:underline;text-underline-offset:3px;text-transform:uppercase;color:${tc};width:100%;max-width:${availW}px;">${ctaHTML}</div>
+    <div style="font-family:'SaansMono',monospace;font-size:${ctaSz}px;letter-spacing:0.05em;text-transform:uppercase;color:${tc};width:100%;max-width:${availW}px;">${ctaHTML}</div>
   </div>
 </div>`;
 }
