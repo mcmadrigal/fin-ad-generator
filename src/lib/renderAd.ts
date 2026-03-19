@@ -241,6 +241,7 @@ export function renderAd(f: FormatSpec, state: AppState, bgs = BACKGROUNDS): str
   const overlayHtml = overlayOpacity > 0
     ? `<div style="position:absolute;inset:0;background:rgba(0,0,0,${overlayOpacity.toFixed(3)});z-index:1;pointer-events:none;"></div>`
     : '';
+  const ctaStyleTag = `<style>.fin-cta{text-decoration:underline;text-underline-offset:0.15em;text-decoration-color:${tc};}</style>`;
   const isStrip = H <= 100;
   const spec = f.spec || null;
   const ta = state.align;
@@ -299,14 +300,14 @@ export function renderAd(f: FormatSpec, state: AppState, bgs = BACKGROUNDS): str
       hlLines = [words.slice(0, mid).join(' '), words.slice(mid).join(' ')].filter(Boolean);
     }
     const hlLineH = hlSz * 1.1;
-    const hlHTML = hlLines.map(l => `<div style="overflow:hidden;white-space:nowrap;">${l}</div>`).join('');
+    const hlHTML = hlLines.map(l => `<span style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${l}</span>`).join('');
     const ctaRaw = (state.cta || '').toUpperCase();
-    const stripCtaHTML = `<div style="white-space:nowrap;"><span style="border-bottom:1px solid ${tc};padding-bottom:2px;">${ctaRaw}</span></div>`;
+    const stripCtaHTML = `<div style="white-space:nowrap;"><span class="fin-cta">${ctaRaw}</span></div>`;
 
-    return `<div style="position:absolute;inset:0;${bg}"></div>${overlayHtml}
+    return `${ctaStyleTag}<div style="position:absolute;inset:0;${bg}"></div>${overlayHtml}
 <div style="position:absolute;inset:0;z-index:2;display:flex;align-items:center;padding:0 ${padX}px;gap:${Math.round(padX * 0.6)}px;">
   <div style="flex-shrink:0;width:${logoW}px;height:${logoH}px;color:${tc};">${LOGO_SVG}</div>
-  <div style="flex:1;min-width:0;font-family:'Saans',sans-serif;font-size:${hlSz}px;line-height:${hlLineH}px;color:${tc};overflow:hidden;white-space:nowrap;text-align:${stripAlign};">${hlHTML}</div>
+  <div style="flex:1;min-width:0;font-family:'Saans',sans-serif;font-size:${hlSz}px;line-height:${hlLineH}px;color:${tc};overflow:hidden;text-align:${stripAlign};">${hlHTML}</div>
   ${showStripCta ? `<div style="flex-shrink:0;font-family:'SaansMono',monospace;font-size:${ctaSz}px;letter-spacing:0.05em;color:${tc};">${stripCtaHTML}</div>` : ''}
 </div>`;
   }
@@ -415,7 +416,7 @@ export function renderAd(f: FormatSpec, state: AppState, bgs = BACKGROUNDS): str
   const ctaAlignOverride = (spec && spec.ctaAlign) ? spec.ctaAlign : ta;
   const ctaAlignStyle = 'text-align:' + ctaAlignOverride + ';';
   const ctaHTML = ctaLines.map((l, i) =>
-    `<div style="white-space:nowrap;${ctaAlignStyle}${i < ctaLines.length - 1 && ctaLineGap ? 'margin-bottom:' + ctaLineGap + 'px;' : ''}"><span style="border-bottom:1px solid ${tc};padding-bottom:2px;">${l}</span></div>`,
+    `<div style="white-space:nowrap;${ctaAlignStyle}${i < ctaLines.length - 1 && ctaLineGap ? 'margin-bottom:' + ctaLineGap + 'px;' : ''}"><span class="fin-cta">${l}</span></div>`,
   ).join('');
   const hlHTML   = hlLines.map(l => `<div style="white-space:nowrap;${alignStyle}">${l}</div>`).join('');
   const subHTML  = subLines2.map(l => `<div style="overflow-wrap:break-word;word-break:break-word;${alignStyle}">${parseBold(l)}</div>`).join('');
@@ -457,7 +458,7 @@ export function renderAd(f: FormatSpec, state: AppState, bgs = BACKGROUNDS): str
     const ctaLines2 = (spec && spec.ctaBreak) ? breakCtaLines(cornersCtaRaw, spec.ctaBreak) : [cornersCtaRaw];
     const ctaLineGap2 = (spec && spec.ctaLineGap) ? spec.ctaLineGap : 0;
     const ctaHTML2 = ctaLines2.map((l, i) =>
-      `<div style="white-space:nowrap;${i < ctaLines2.length - 1 && ctaLineGap2 ? 'margin-bottom:' + ctaLineGap2 + 'px;' : ''}"><span style="border-bottom:1px solid ${tc};padding-bottom:2px;">${l}</span></div>`,
+      `<div style="white-space:nowrap;${i < ctaLines2.length - 1 && ctaLineGap2 ? 'margin-bottom:' + ctaLineGap2 + 'px;' : ''}"><span class="fin-cta">${l}</span></div>`,
     ).join('');
     const capRatio = 0.71;
     const hlLeading = (hlSz * 1.1 - hlSz) / 2;
@@ -465,7 +466,7 @@ export function renderAd(f: FormatSpec, state: AppState, bgs = BACKGROUNDS): str
     const logoCapNudge = capNudge;
     const cornersHlHTML = cornersHlLines.map(l => `<div style="overflow-wrap:break-word;">${parseBold(l)}</div>`).join('');
 
-    return `<div style="position:absolute;inset:0;${bg}"></div>${overlayHtml}
+    return `${ctaStyleTag}<div style="position:absolute;inset:0;${bg}"></div>${overlayHtml}
 <div style="position:absolute;inset:0;z-index:2;overflow:hidden;">
   <div style="position:absolute;top:${padY}px;left:${padX}px;max-width:${availW * 0.6}px;margin-top:${capNudge.toFixed(1)}px;">
     <div style="font-family:'Saans',sans-serif;font-size:${hlSz}px;line-height:1.1;color:${tc};">${cornersHlHTML}</div>
@@ -481,7 +482,7 @@ export function renderAd(f: FormatSpec, state: AppState, bgs = BACKGROUNDS): str
 
   // ── CENTER TEXT LAYOUT ─────────────────────────────────────────────────────
   if (spec && spec.centerText) {
-    return `<div style="position:absolute;inset:0;${bg}"></div>${overlayHtml}
+    return `${ctaStyleTag}<div style="position:absolute;inset:0;${bg}"></div>${overlayHtml}
 <div style="position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;${itemsAlign}padding:${padY}px ${padX}px;overflow:hidden;">
   <div style="flex-shrink:0;width:${logoW}px;height:${logoH}px;color:${tc};">${LOGO_SVG}</div>
   <div style="flex:1;display:flex;flex-direction:column;${itemsAlign}justify-content:center;width:100%;min-height:0;overflow:hidden;">
@@ -495,7 +496,7 @@ export function renderAd(f: FormatSpec, state: AppState, bgs = BACKGROUNDS): str
   }
 
   // ── DEFAULT LAYOUT ─────────────────────────────────────────────────────────
-  return `<div style="position:absolute;inset:0;${bg}"></div>${overlayHtml}
+  return `${ctaStyleTag}<div style="position:absolute;inset:0;${bg}"></div>${overlayHtml}
 <div style="position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;overflow:hidden;">
   <div style="padding:${padY}px ${padX}px;flex-shrink:0;">
     <div style="width:${logoW}px;height:${logoH}px;color:${tc};">${LOGO_SVG}</div>
