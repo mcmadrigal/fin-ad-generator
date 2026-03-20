@@ -10,11 +10,22 @@ export async function POST(req: NextRequest) {
 
   let browser;
   try {
+    chromium.setGraphicsMode = false;
+
     browser = await puppeteer.launch({
-      args:            chromium.args,
+      args: [
+        ...chromium.args,
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process',
+      ],
       defaultViewport: { width, height },
-      executablePath:  await chromium.executablePath(),
-      headless:        true,
+      executablePath:  await chromium.executablePath('/tmp/localchromium'),
+      headless:        chromium.headless,
     });
 
     const page = await browser.newPage();
