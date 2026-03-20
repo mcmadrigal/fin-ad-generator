@@ -38,11 +38,10 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (err) {
-    console.error('Capture error:', err);
+    const message = err instanceof Error ? err.message : String(err);
+    const stack   = err instanceof Error ? err.stack   : '';
+    console.error('Capture error:', message, stack);
     if (browser) await browser.close().catch(() => {});
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : String(err) },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: message, stack }, { status: 500 });
   }
 }

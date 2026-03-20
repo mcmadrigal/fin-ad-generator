@@ -53,7 +53,11 @@ export async function downloadAll(
       body:    JSON.stringify({ html, width: w, height: h }),
     });
 
-    if (!res.ok) throw new Error(`Capture failed for "${label}": ${res.statusText}`);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      console.error('API error:', body);
+      throw new Error(body.error || res.statusText || 'Unknown error');
+    }
 
     const blob     = await res.blob();
     const fileName = `${campaign}_${platform}_${label}.png`;

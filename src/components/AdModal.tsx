@@ -62,7 +62,11 @@ export function AdModal({ format, state, bgs, onClose, onOverride }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ html, width: format.w, height: format.h }),
       });
-      if (!res.ok) throw new Error(res.statusText);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        console.error('API error:', body);
+        throw new Error(body.error || res.statusText || 'Unknown error');
+      }
       const blob = await res.blob();
       const url  = URL.createObjectURL(blob);
       const a    = document.createElement('a');
