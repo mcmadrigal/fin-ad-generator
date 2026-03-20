@@ -1,7 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Vercel-compatible defaults — no server-only deps in rendering pipeline
   reactStrictMode: true,
+  experimental: {
+    serverComponentsExternalPackages: ['puppeteer-core', '@sparticuz/chromium'],
+  },
 };
 
 module.exports = nextConfig;

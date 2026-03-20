@@ -1,44 +1,12 @@
-import type { AppState } from '@/types';
+import type { AppState, Background } from '@/types';
 import { PLATFORMS, ALL_CHANNELS } from './platforms';
+import { renderAdHTML } from './renderAd';
 
 export type ProgressFn = (done: number, total: number) => void;
 
-const CAPTURE_TIMEOUT_MS = 10_000;
-
-async function captureWithFallback(el: HTMLElement, w: number, h: number): Promise<Blob> {
-  const { captureElement } = await import('./captureElement');
-  const { default: html2canvas } = await import('html2canvas');
-
-  try {
-    const blob = await Promise.race<Blob>([
-      captureElement(el, w, h),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('timeout')), CAPTURE_TIMEOUT_MS),
-      ),
-    ]);
-    return blob;
-  } catch {
-    // SVG foreignObject timed out or failed — fall back to html2canvas
-    const canvas = await html2canvas(el, {
-      scale:           1,
-      useCORS:         true,
-      allowTaint:      true,
-      backgroundColor: '#000',
-      logging:         false,
-      imageTimeout:    0,
-      removeContainer: true,
-    });
-    return new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob(
-        b => (b ? resolve(b) : reject(new Error('toBlob failed'))),
-        'image/png',
-      );
-    });
-  }
-}
-
 export async function downloadAll(
-  state: AppState,
+  state:      AppState,
+  bgs:        Background[],
   onProgress?: ProgressFn,
 ): Promise<void> {
   const { default: JSZip } = await import('jszip');
@@ -49,26 +17,45 @@ export async function downloadAll(
   const zip        = new JSZip();
 
   // Collect selected formats in channel order
-  const selected: Array<{ platform: string; label: string; w: number; h: number; key: string }> = [];
+  const selected: Array<{ platform: string; label: string; key: string; w: number; h: number }> = [];
   for (const platform of ALL_CHANNELS) {
     for (const f of PLATFORMS[platform]) {
       const key = f._platformKey || `${platform}_${f.label}`;
       if (state.selected.has(key)) {
-        selected.push({ platform, label: f.label, w: f.w, h: f.h, key });
+        selected.push({ platform, label: f.label, key, w: f.w, h: f.h });
       }
     }
   }
 
   onProgress?.(0, selected.length);
 
-  // Sequential — parallel large-canvas captures exhaust memory and stall
+  // Sequential — parallel large captures exhaust memory
   for (let i = 0; i < selected.length; i++) {
-    const { platform, label, w, h, key } = selected[i];
+    const { platform, label, key, w, h } = selected[i];
 
-    const el = document.querySelector(`[data-format-key="${key}"]`) as HTMLElement | null;
-    if (!el) throw new Error(`Ad element not found for "${key}". Make sure the format is selected and visible in the grid.`);
+    // Apply per-format overrides
+    const overrides = state.formatOverrides[key] || {};
+    const effectiveState: AppState = {
+      ...state,
+      headline: overrides.hl  || state.headline,
+      cta:      overrides.cta || state.cta,
+    };
 
-    const blob     = await captureWithFallback(el, w, h);
+    // Find the FormatSpec so we can build the full HTML document
+    const f = PLATFORMS[platform as keyof typeof PLATFORMS]
+      .find(fmt => (fmt._platformKey || `${platform}_${fmt.label}`) === key)!;
+
+    const html = await renderAdHTML(f, effectiveState, bgs);
+
+    const res = await fetch('/api/capture', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ html, width: w, height: h }),
+    });
+
+    if (!res.ok) throw new Error(`Capture failed for "${label}": ${res.statusText}`);
+
+    const blob     = await res.blob();
     const fileName = `${campaign}_${platform}_${label}.png`;
     zip.folder(folderName)!.file(fileName, blob);
 

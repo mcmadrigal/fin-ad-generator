@@ -49,11 +49,21 @@ export function AdModal({ format, state, bgs, onClose, onOverride }: Props) {
   }, [onClose]);
 
   async function downloadPng() {
-    const el = innerRef.current;
-    if (!el) return;
-    const { captureElement } = await import('@/lib/captureElement');
+    const { renderAdHTML } = await import('@/lib/renderAd');
     try {
-      const blob = await captureElement(el, format.w, format.h);
+      const effectiveState: AppState = {
+        ...state,
+        headline: overrideData.hl  || state.headline,
+        cta:      overrideData.cta || state.cta,
+      };
+      const html = await renderAdHTML(format, effectiveState, bgs);
+      const res  = await fetch('/api/capture', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ html, width: format.w, height: format.h }),
+      });
+      if (!res.ok) throw new Error(res.statusText);
+      const blob = await res.blob();
       const url  = URL.createObjectURL(blob);
       const a    = document.createElement('a');
       a.download = `${state.campaign || 'fin-ad'}_${format.label}.png`;

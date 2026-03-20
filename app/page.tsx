@@ -193,7 +193,7 @@ export default function HomePage() {
     if (!state.campaign.trim() || dlProgress !== null) return;
     try {
       setDlProgress({ done: 0, total: 0 });
-      await downloadAll(state, (done, total) => setDlProgress({ done, total }));
+      await downloadAll(state, bgs, (done, total) => setDlProgress({ done, total }));
     } catch (e) {
       alert('Download error: ' + (e as Error).message);
     } finally {
