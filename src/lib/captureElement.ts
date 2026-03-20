@@ -1,10 +1,10 @@
 /** SVG foreignObject capture — pixel-perfect PNG export using the live browser renderer. */
 
-// Module-level cache: path → base64 data URL
-const dataUrlCache = new Map<string, string>();
+// Module-level font cache: path → base64 data URL
+const fontCache = new Map<string, string>();
 
-async function toDataURL(path: string): Promise<string> {
-  if (dataUrlCache.has(path)) return dataUrlCache.get(path)!;
+async function fontToDataURL(path: string): Promise<string> {
+  if (fontCache.has(path)) return fontCache.get(path)!;
   const resp = await fetch(path);
   if (!resp.ok) throw new Error(`Failed to fetch ${path}: ${resp.status}`);
   const blob = await resp.blob();
@@ -14,16 +14,16 @@ async function toDataURL(path: string): Promise<string> {
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
-  dataUrlCache.set(path, dataUrl);
+  fontCache.set(path, dataUrl);
   return dataUrl;
 }
 
 // Build @font-face CSS with all three brand fonts embedded as base64
 async function buildEmbedCSS(): Promise<string> {
   const [regular, semibold, mono] = await Promise.all([
-    toDataURL('/fonts/Saans-Regular.ttf'),
-    toDataURL('/fonts/Saans-SemiBold.ttf'),
-    toDataURL('/fonts/SaansMono-Regular.ttf'),
+    fontToDataURL('/fonts/Saans-Regular.ttf'),
+    fontToDataURL('/fonts/Saans-SemiBold.ttf'),
+    fontToDataURL('/fonts/SaansMono-Regular.ttf'),
   ]);
   return [
     `@font-face{font-family:'Saans';src:url('${regular}')format('truetype');font-weight:normal;font-display:block;}`,
@@ -34,26 +34,11 @@ async function buildEmbedCSS(): Promise<string> {
   ].join('');
 }
 
-// Replace url('/...') references inside an HTML string with embedded data URLs
-async function inlineImages(html: string): Promise<string> {
-  const paths = Array.from(new Set(
-    Array.from(html.matchAll(/url\(['"]?(\/[^'")]+)['"]?\)/g)).map(m => m[1]),
-  ));
-
-  await Promise.allSettled(paths.map(p => toDataURL(p)));
-
-  return html.replace(/url\(['"]?(\/[^'")]+)['"]?\)/g, (match, path) => {
-    const d = dataUrlCache.get(path);
-    return d ? `url('${d}')` : match;
-  });
-}
-
 /**
  * Capture `el` at `w × h` pixels using SVG foreignObject rendering.
  * Returns a PNG Blob.
  */
 export async function captureElement(el: HTMLElement, w: number, h: number): Promise<Blob> {
-  // Clone so we can mutate styles without affecting the live DOM
   const clone = el.cloneNode(true) as HTMLElement;
   clone.style.transform       = 'none';
   clone.style.width           = `${w}px`;
@@ -64,8 +49,7 @@ export async function captureElement(el: HTMLElement, w: number, h: number): Pro
   clone.style.transformOrigin = 'top left';
 
   const embedCSS = await buildEmbedCSS();
-  let   html     = clone.outerHTML;
-  html           = await inlineImages(html);
+  const html     = clone.outerHTML;
 
   const svg = [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">`,
@@ -96,7 +80,7 @@ export async function captureElement(el: HTMLElement, w: number, h: number): Pro
     };
     img.onerror = () => {
       URL.revokeObjectURL(svgUrl);
-      reject(new Error('SVG Image failed to load'));
+      reject(new Error('SVG image failed to load'));
     };
     img.src = svgUrl;
   });
