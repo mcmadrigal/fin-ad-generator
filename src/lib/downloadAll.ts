@@ -35,10 +35,19 @@ export async function downloadAll(
     if (!el) throw new Error(`Ad element not found for "${key}". Make sure the format is selected and visible in the grid.`);
 
     const dataUrl = await toPng(el, {
-      width:      w,
-      height:     h,
-      pixelRatio: 1,
-      skipFonts:  false,
+      width:        w,
+      height:       h,
+      pixelRatio:   1,
+      skipFonts:    false,
+      style: {
+        width:           w + 'px',
+        height:          h + 'px',
+        overflow:        'hidden',
+        transform:       'none',
+        transformOrigin: 'top left',
+      },
+      canvasWidth:  w,
+      canvasHeight: h,
     });
 
     // Convert data URL to Blob for zipping

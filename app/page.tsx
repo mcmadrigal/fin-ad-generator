@@ -195,7 +195,21 @@ export default function HomePage() {
     const { toPng } = await import('html-to-image');
     const campaign  = state.campaign.trim().replace(/\s+/g, '_') || 'fin-ad';
     const platform  = platformKey.split('_')[0];
-    const dataUrl   = await toPng(el, { width: format.w, height: format.h, pixelRatio: 1, skipFonts: false });
+    const dataUrl   = await toPng(el, {
+      width:        format.w,
+      height:       format.h,
+      pixelRatio:   1,
+      skipFonts:    false,
+      style: {
+        width:           format.w + 'px',
+        height:          format.h + 'px',
+        overflow:        'hidden',
+        transform:       'none',
+        transformOrigin: 'top left',
+      },
+      canvasWidth:  format.w,
+      canvasHeight: format.h,
+    });
     const a         = document.createElement('a');
     a.download      = `${campaign}_${platform}_${format.label}.png`;
     a.href          = dataUrl;

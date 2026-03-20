@@ -54,10 +54,19 @@ export function AdModal({ format, state, bgs, onClose, onOverride }: Props) {
     const { toPng } = await import('html-to-image');
     try {
       const dataUrl = await toPng(el, {
-        width:      format.w,
-        height:     format.h,
-        pixelRatio: 1,
-        skipFonts:  false,
+        width:        format.w,
+        height:       format.h,
+        pixelRatio:   1,
+        skipFonts:    false,
+        style: {
+          width:           format.w + 'px',
+          height:          format.h + 'px',
+          overflow:        'hidden',
+          transform:       'none',
+          transformOrigin: 'top left',
+        },
+        canvasWidth:  format.w,
+        canvasHeight: format.h,
       });
       const a    = document.createElement('a');
       a.download = `${state.campaign || 'fin-ad'}_${format.label}.png`;
