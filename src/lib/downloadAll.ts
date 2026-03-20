@@ -1,12 +1,11 @@
-import type { AppState, Background } from '@/types';
+import { toPng } from 'html-to-image';
+import type { AppState } from '@/types';
 import { PLATFORMS, ALL_CHANNELS } from './platforms';
-import { renderAdHTML } from './renderAd';
 
 export type ProgressFn = (done: number, total: number) => void;
 
 export async function downloadAll(
-  state:      AppState,
-  bgs:        Background[],
+  state:       AppState,
   onProgress?: ProgressFn,
 ): Promise<void> {
   const { default: JSZip } = await import('jszip');
@@ -29,37 +28,21 @@ export async function downloadAll(
 
   onProgress?.(0, selected.length);
 
-  // Sequential — parallel large captures exhaust memory
   for (let i = 0; i < selected.length; i++) {
     const { platform, label, key, w, h } = selected[i];
 
-    // Apply per-format overrides
-    const overrides = state.formatOverrides[key] || {};
-    const effectiveState: AppState = {
-      ...state,
-      headline: overrides.hl  || state.headline,
-      cta:      overrides.cta || state.cta,
-    };
+    const el = document.querySelector(`[data-format-key="${key}"]`) as HTMLElement | null;
+    if (!el) throw new Error(`Ad element not found for "${key}". Make sure the format is selected and visible in the grid.`);
 
-    // Find the FormatSpec so we can build the full HTML document
-    const f = PLATFORMS[platform as keyof typeof PLATFORMS]
-      .find(fmt => (fmt._platformKey || `${platform}_${fmt.label}`) === key)!;
-
-    const html = await renderAdHTML(f, effectiveState, bgs);
-
-    const res = await fetch('/api/capture', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ html, width: w, height: h }),
+    const dataUrl = await toPng(el, {
+      width:      w,
+      height:     h,
+      pixelRatio: 1,
+      skipFonts:  false,
     });
 
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      console.error('API error:', body);
-      throw new Error(body.error || res.statusText || 'Unknown error');
-    }
-
-    const blob     = await res.blob();
+    // Convert data URL to Blob for zipping
+    const blob     = await fetch(dataUrl).then(r => r.blob());
     const fileName = `${campaign}_${platform}_${label}.png`;
     zip.folder(folderName)!.file(fileName, blob);
 

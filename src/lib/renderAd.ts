@@ -6,7 +6,7 @@
  * Scale the container with CSS transform:scale() for preview display.
  */
 
-import type { FormatSpec, AppState, Background } from '@/types';
+import type { FormatSpec, AppState } from '@/types';
 import { BACKGROUNDS } from './backgrounds';
 
 // ─── LOGO SVG ─────────────────────────────────────────────────────────────────
@@ -507,70 +507,6 @@ export function renderAd(f: FormatSpec, state: AppState, bgs = BACKGROUNDS): str
     <div style="font-family:'SaansMono',monospace;font-size:${ctaSz}px;letter-spacing:0.05em;text-transform:uppercase;color:${tc};width:100%;max-width:${availW}px;">${ctaHTML}</div>
   </div>
 </div>`;
-}
-
-// ─── SELF-CONTAINED HTML DOCUMENT FOR SERVER-SIDE RENDERING ─────────────────
-// Module-level cache for base64-encoded assets (fonts + background images)
-const _assetCache = new Map<string, string>();
-
-async function _fetchBase64(path: string): Promise<string> {
-  if (_assetCache.has(path)) return _assetCache.get(path)!;
-  const resp = await fetch(path);
-  if (!resp.ok) throw new Error(`Failed to fetch ${path}: ${resp.status}`);
-  const blob = await resp.blob();
-  const dataUrl = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload  = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-  _assetCache.set(path, dataUrl);
-  return dataUrl;
-}
-
-/**
- * Returns a complete, self-contained HTML document for a single ad format.
- * All fonts and background images are inlined as base64 data URLs so the
- * document renders correctly inside Puppeteer's setContent() without any
- * network requests.
- */
-export async function renderAdHTML(
-  f:     FormatSpec,
-  state: AppState,
-  bgs:   Background[],
-): Promise<string> {
-  const adFragment = renderAd(f, state, bgs);
-
-  // Inline fonts
-  const [regular, semibold, mono] = await Promise.all([
-    _fetchBase64('/fonts/Saans-Regular.ttf'),
-    _fetchBase64('/fonts/Saans-SemiBold.ttf'),
-    _fetchBase64('/fonts/SaansMono-Regular.ttf'),
-  ]);
-
-  // Inline background image if it's a relative URL path
-  const bg = bgs[state.bgIdx] || bgs[0];
-  let fragment = adFragment;
-  if (!bg.v.startsWith('solid:') && !bg.v.startsWith('data:')) {
-    try {
-      const bgData = await _fetchBase64(bg.v);
-      fragment = fragment.split(bg.v).join(bgData);
-    } catch { /* leave URL as-is if fetch fails */ }
-  }
-
-  return `<!DOCTYPE html>
-<html><head><style>
-  @font-face{font-family:'Saans';src:url('${regular}')format('truetype');font-weight:normal;font-display:block;}
-  @font-face{font-family:'Saans';src:url('${semibold}')format('truetype');font-weight:600;font-display:block;}
-  @font-face{font-family:'SaansMono';src:url('${mono}')format('truetype');font-weight:normal;font-display:block;}
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-  body{width:${f.w}px;height:${f.h}px;overflow:hidden;}
-  .fin-cta{text-decoration:underline;text-underline-offset:0.15em;}
-</style></head><body>
-<div style="position:relative;width:${f.w}px;height:${f.h}px;overflow:hidden;">
-  ${fragment}
-</div>
-</body></html>`;
 }
 
 // ─── RESTRICTION HELPERS ──────────────────────────────────────────────────────

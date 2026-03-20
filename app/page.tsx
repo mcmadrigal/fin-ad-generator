@@ -188,12 +188,26 @@ export default function HomePage() {
     }));
   }, []);
 
+  // ── SINGLE FORMAT DOWNLOAD ────────────────────────────────────────────────
+  async function downloadSingle(format: FormatSpec, platformKey: string) {
+    const el = document.querySelector(`[data-format-key="${platformKey}"]`) as HTMLElement | null;
+    if (!el) { alert('Format not visible — make sure it is selected'); return; }
+    const { toPng } = await import('html-to-image');
+    const campaign  = state.campaign.trim().replace(/\s+/g, '_') || 'fin-ad';
+    const platform  = platformKey.split('_')[0];
+    const dataUrl   = await toPng(el, { width: format.w, height: format.h, pixelRatio: 1, skipFonts: false });
+    const a         = document.createElement('a');
+    a.download      = `${campaign}_${platform}_${format.label}.png`;
+    a.href          = dataUrl;
+    a.click();
+  }
+
   // ── DOWNLOAD ALL ──────────────────────────────────────────────────────────
   async function handleDownloadAll() {
     if (!state.campaign.trim() || dlProgress !== null) return;
     try {
       setDlProgress({ done: 0, total: 0 });
-      await downloadAll(state, bgs, (done, total) => setDlProgress({ done, total }));
+      await downloadAll(state, (done, total) => setDlProgress({ done, total }));
     } catch (e) {
       alert('Download error: ' + (e as Error).message);
     } finally {
